@@ -116,7 +116,7 @@ export SCANPREP_CONN="Host=localhost;Port=5432;Username=postgres;Password=YOURPA
 dotnet run
 ```
 
-First run restores NuGet packages, creates the `scanprep` database, and prints ten
+First run restores NuGet packages, creates the `scanprep` database, and prints thirteen
 sections of output. Running it again changes nothing — verified by running it twice
 and diffing row counts, not by assertion.
 

@@ -110,8 +110,15 @@ public static class Controls
     /// not accumulate near-identical exports — the same replay-safety reasoning
     /// as the scan run ids.
     /// </param>
-    /// <returns>How many control statuses were written.</returns>
-    public static async Task<int> GenerateExportAsync(NpgsqlConnection conn, Guid exportId) =>
+    /// <returns>
+    /// How many control statuses the export CONTAINS — deliberately not how many
+    /// rows this call inserted. Those differ: the insert is idempotent, so a
+    /// second run against the same database inserts nothing and would report
+    /// zero, which reads as a failure when the export is in fact complete. Report
+    /// the state, not the delta.
+    /// </returns>
+    public static async Task<int> GenerateExportAsync(NpgsqlConnection conn, Guid exportId)
+    {
         await conn.ExecuteAsync("""
             -- The assessment is dated to the FIRST scan, not the latest. That is
             -- the entire mechanism: the compliance record is a photograph, the
@@ -144,6 +151,12 @@ public static class Controls
             LEFT JOIN serious_evidence se ON se.control_id = c.control_id
             ON CONFLICT (exported_at, control_id) DO NOTHING
             """, new { exportId });
+
+        // Report what the export holds, not what this call happened to add.
+        return await conn.ExecuteScalarAsync<int>(
+            "SELECT count(*)::int FROM control_status WHERE export_id = @exportId",
+            new { exportId });
+    }
 
     /// <summary>
     /// The correlation. Five outcomes, and only one of them is boring.

@@ -58,7 +58,7 @@ dotnet run
 The first run takes a minute — it downloads two libraries, creates a database
 called `scanprep`, builds the tables, and then does its work. Later runs are fast.
 
-**You should see** ten numbered sections scroll past, ending with `done.`
+**You should see** thirteen numbered sections scroll past, ending with `done.`
 
 If it fails with a connection error, jump to **Troubleshooting** at the bottom.
 
@@ -66,7 +66,7 @@ If it fails with a connection error, jump to **Troubleshooting** at the bottom.
 
 ### Step 3 — Understand what you just watched
 
-Those ten sections are three separate stories. You do not need to follow them yet,
+Those thirteen sections are three separate stories. You do not need to follow them yet,
 just know the shape:
 
 | Sections | Story |
