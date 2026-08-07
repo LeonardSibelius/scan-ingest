@@ -2,27 +2,54 @@ using Npgsql;
 
 namespace ScanIngest;
 
-/// <summary>
-/// Creates the database and schema. Everything here is idempotent — run it as
-/// many times as you like. That matters: in a ConMon pipeline the bootstrap runs
-/// on every deploy, and a schema step that only works once is a schema step that
-/// will page somebody at 3am.
-/// </summary>
+// =============================================================================
+// Schema.cs — the database, its tables, and its partitions.
+//
+// Everything in this file is idempotent: run it a hundred times and the hundredth
+// run is a no-op. That is not tidiness, it is a requirement. Schema bootstrap
+// runs on every deploy of a pipeline like this, and a step that only works
+// against an empty database is a step that fails on every deploy after the first.
+//
+// The schema is the argument this project is really making, so the DDL below
+// carries most of the reasoning. Three tables matter:
+//
+//   raw_finding   what the scanner said, untouched, as jsonb
+//   finding       what we can typecheck, partitioned by scan month
+//   poam          what somebody promised, keyed by problem rather than by scan
+// =============================================================================
+
 public static class Schema
 {
-    /// Connects to the maintenance database and creates ours if it isn't there.
+    /// <summary>
+    /// Creates the application database if it does not already exist.
+    ///
+    /// This one connects to the <c>postgres</c> maintenance database rather than
+    /// ours, for the obvious reason that you cannot connect to a database in
+    /// order to create it.
+    /// </summary>
+    /// <param name="adminConnString">Connection string pointing at <c>postgres</c>.</param>
     public static async Task EnsureDatabaseAsync(string adminConnString, string dbName)
     {
         await using var conn = new NpgsqlConnection(adminConnString);
         await conn.OpenAsync();
 
+        // Existence check first. CREATE DATABASE has no IF NOT EXISTS form —
+        // unlike almost every other CREATE in Postgres — so this has to be a
+        // look-then-leap rather than a single statement.
         await using var check = new NpgsqlCommand(
             "SELECT 1 FROM pg_database WHERE datname = @name", conn);
         check.Parameters.AddWithValue("name", dbName);
 
+        // C# note: `is null` rather than `== null`. Pattern matching, and it
+        // cannot be subverted by an overloaded equality operator.
         if (await check.ExecuteScalarAsync() is null)
         {
-            // CREATE DATABASE cannot be parameterised, so quote the identifier.
+            // CREATE DATABASE cannot take a parameter — the database name is an
+            // identifier, not a value, and parameters only ever substitute
+            // values. So it has to be interpolated, which means quoting it
+            // properly: wrap in double quotes and double any embedded quote.
+            // That is the identifier-escaping rule, and it is the only safe way
+            // to build a statement like this.
             await using var create = new NpgsqlCommand(
                 $"CREATE DATABASE \"{dbName.Replace("\"", "\"\"")}\"", conn);
             await create.ExecuteNonQueryAsync();
@@ -138,18 +165,36 @@ public static class Schema
         );
         """;
 
+    /// <summary>
+    /// Applies the whole DDL block above in one round trip. Every statement in it
+    /// is <c>CREATE ... IF NOT EXISTS</c>, so this is safe on an existing
+    /// database and cheap on a fresh one.
+    /// </summary>
     public static async Task EnsureSchemaAsync(NpgsqlConnection conn)
     {
+        // Npgsql will happily execute a multi-statement command, so the entire
+        // schema goes over the wire once instead of statement by statement.
         await using var cmd = new NpgsqlCommand(Ddl, conn);
         await cmd.ExecuteNonQueryAsync();
     }
 
-    /// Creates the monthly partition covering <paramref name="when"/>, if absent.
+    /// <summary>
+    /// Creates the monthly partition covering <paramref name="when"/>, if it does
+    /// not already exist. Called before every ingest, because Postgres rejects an
+    /// insert whose partition key falls outside every defined partition — there
+    /// is no default landing place unless you declare one.
+    ///
+    /// A production system would create partitions ahead of time on a schedule
+    /// rather than on the write path. Doing it inline here keeps the demo to one
+    /// command with no cron.
+    /// </summary>
     public static async Task EnsurePartitionAsync(NpgsqlConnection conn, DateTimeOffset when)
     {
+        // Truncate to the first instant of the month, in UTC. TimeSpan.Zero is
+        // the offset — this is deliberately NOT local midnight, see below.
         var start = new DateTimeOffset(when.Year, when.Month, 1, 0, 0, 0, TimeSpan.Zero);
         var end   = start.AddMonths(1);
-        var name  = $"finding_{start:yyyy_MM}";
+        var name  = $"finding_{start:yyyy_MM}";   // e.g. finding_2026_08
 
         // The offset on these literals is NOT optional. `scanned_at` is timestamptz,
         // and a bare date literal is resolved in the *server's* timezone — so on a

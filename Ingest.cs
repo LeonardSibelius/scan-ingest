@@ -4,39 +4,84 @@ using NpgsqlTypes;
 
 namespace ScanIngest;
 
-/// <summary>
-/// The two-stage load that every serious ingest pipeline ends up with:
-///
-///   1. COPY the raw payload into a landing table, fast and without judgement.
-///   2. Project it into the normalised fact table with ON CONFLICT DO NOTHING.
-///
-/// Stage 1 is fast because COPY is fast. Stage 2 is safe because the fact table's
-/// primary key does the deduplication. COPY itself cannot express ON CONFLICT,
-/// which is exactly why the landing table exists — it is not ceremony.
-/// </summary>
+// =============================================================================
+// Ingest.cs — getting scan data into the database, fast and exactly once.
+//
+// The two-stage load that every serious ingest pipeline converges on:
+//
+//   STAGE 1  COPY the raw payload into a landing table. Fast, and it makes no
+//            judgement about the data's shape.
+//   STAGE 2  Project it into the typed fact table with ON CONFLICT DO NOTHING.
+//
+// The obvious question is why not do it in one step. The answer is that COPY —
+// the only genuinely fast bulk path Postgres offers — CANNOT express ON CONFLICT.
+// You can have speed or you can have conflict handling, not both, in one
+// statement. The landing table is what lets you have both: COPY into it at full
+// speed, then a set-based INSERT..SELECT out of it that can deduplicate.
+//
+// So the landing table is not ceremony and it is not "staging because that's what
+// people do". It is the specific structural consequence of one limitation in COPY.
+// =============================================================================
+
 public static class Ingest
 {
+    /// <summary>
+    /// Loads one scan. Safe to call repeatedly with the same run — the second
+    /// call inserts nothing and reports zero.
+    /// </summary>
+    /// <param name="run">
+    /// Scan metadata. Its <c>ScanRunId</c> must be deterministic for replay
+    /// safety — see the note in Program.cs about why random ids broke this.
+    /// </param>
+    /// <returns>
+    /// How many rows actually landed in the fact table. Zero on a replay, which
+    /// is the signal the idempotency check in Program.cs looks for.
+    /// </returns>
     public static async Task<int> IngestAsync(
         NpgsqlConnection conn, ScanRun run, IReadOnlyList<Finding> findings)
     {
+        // The fact table is partitioned by month, and Postgres will reject an
+        // insert whose date falls outside every existing partition. Create the
+        // one this scan needs before doing anything else.
         await Schema.EnsurePartitionAsync(conn, run.ScannedAt);
 
+        // Everything below is one transaction: either the whole scan lands or
+        // none of it does. A half-ingested scan would make the delta reports
+        // report remediation that never happened.
+        //
+        // C# note: `await using` is try-with-resources for IAsyncDisposable. The
+        // transaction is rolled back on dispose if it was never committed, so an
+        // exception anywhere below cleans up without an explicit catch.
         await using var tx = await conn.BeginTransactionAsync();
 
-        // --- Register the run. Re-running is harmless. ---
+        // ---------------------------------------------------------------------
+        // Register the scan run itself.
+        // ---------------------------------------------------------------------
+        // ON CONFLICT DO NOTHING makes a replay harmless: the run already exists,
+        // nothing changes, and we carry on to re-derive everything downstream.
         await using (var cmd = new NpgsqlCommand("""
             INSERT INTO scan_run (scan_run_id, scanned_at, source)
             VALUES (@id, @at, @src)
             ON CONFLICT (scan_run_id) DO NOTHING
             """, conn, tx))
         {
+            // Parameters, never string concatenation. This is a demo against
+            // synthetic data, but the habit is the point — the moment scanner
+            // output is interpolated into SQL you have handed the scanner's
+            // output author a shell.
             cmd.Parameters.AddWithValue("id",  run.ScanRunId);
             cmd.Parameters.AddWithValue("at",  run.ScannedAt);
             cmd.Parameters.AddWithValue("src", run.Source);
             await cmd.ExecuteNonQueryAsync();
         }
 
-        // --- Clear any prior landing rows for this run, so re-ingest is clean. ---
+        // ---------------------------------------------------------------------
+        // Clear this run's landing rows before re-copying.
+        // ---------------------------------------------------------------------
+        // The landing table has no natural key — it is an append-only record of
+        // "what arrived" — so COPY into it cannot deduplicate itself. Deleting
+        // this run's rows first is what makes the whole method idempotent rather
+        // than just the fact-table half of it.
         await using (var cmd = new NpgsqlCommand(
             "DELETE FROM raw_finding WHERE scan_run_id = @id", conn, tx))
         {
@@ -44,16 +89,23 @@ public static class Ingest
             await cmd.ExecuteNonQueryAsync();
         }
 
-        // --- Stage 1: binary COPY into the jsonb landing table. ---
-        // Npgsql's binary importer is the .NET equivalent of psql's \copy, and it
-        // is roughly an order of magnitude faster than row-by-row INSERT.
+        // ---------------------------------------------------------------------
+        // STAGE 1 — binary COPY into the jsonb landing table.
+        // ---------------------------------------------------------------------
+        // Npgsql's binary importer is the .NET equivalent of psql's \copy. It
+        // streams rows over the wire in Postgres's own binary format, skipping
+        // both SQL parsing and text encoding per row, and runs roughly an order
+        // of magnitude faster than row-by-row INSERT.
         await using (var writer = await conn.BeginBinaryImportAsync(
             "COPY raw_finding (scan_run_id, payload) FROM STDIN (FORMAT BINARY)"))
         {
             foreach (var f in findings)
             {
-                // Build the JSON explicitly rather than relying on a naming policy —
-                // these keys have to match the ->> extractions in stage 2.
+                // The JSON keys are built explicitly rather than by serialising
+                // the Finding record with a naming policy. These keys are a
+                // contract: stage 2 extracts them by name with ->>, and a
+                // serializer convention change would break that join silently,
+                // producing NULLs rather than an error.
                 var json = JsonSerializer.Serialize(new Dictionary<string, object?>
                 {
                     ["host"]        = f.Host,
@@ -63,15 +115,34 @@ public static class Ingest
                     ["cve"]         = f.Cve,
                 });
 
+                // Binary COPY is positional: one StartRow, then one Write per
+                // column in the order named in the COPY statement above. The
+                // NpgsqlDbType tells the driver how to encode each value.
                 await writer.StartRowAsync();
                 await writer.WriteAsync(run.ScanRunId, NpgsqlDbType.Uuid);
                 await writer.WriteAsync(json,          NpgsqlDbType.Jsonb);
             }
 
+            // CompleteAsync flushes and commits the copy operation. Skipping it
+            // — including by throwing before reaching it — discards everything
+            // written, which is the correct failure mode but a surprising one if
+            // you have not met it before.
             await writer.CompleteAsync();
         }
 
-        // --- Stage 2: project jsonb into the typed fact table, idempotently. ---
+        // ---------------------------------------------------------------------
+        // STAGE 2 — project jsonb into the typed fact table.
+        // ---------------------------------------------------------------------
+        // ->> extracts a JSON field AS TEXT (-> would return jsonb), so numeric
+        // fields need an explicit cast. That cast is also the first point where
+        // malformed scanner output would fail loudly, which is where you want it:
+        // the landing table accepts anything, the fact table accepts only what
+        // typechecks.
+        //
+        // ON CONFLICT DO NOTHING is the idempotency guarantee. The fact table's
+        // primary key is (scanned_at, host, plugin_id) — re-ingesting the same
+        // scan collides on every row and inserts none. ExecuteNonQueryAsync then
+        // returns 0, which is what the caller reports.
         int inserted;
         await using (var cmd = new NpgsqlCommand("""
             INSERT INTO finding
@@ -84,6 +155,8 @@ public static class Ingest
                    (rf.payload ->> 'severity')::smallint,
                    rf.payload ->> 'cve'
             FROM raw_finding rf
+            -- scanned_at lives on the run, not on each finding's payload. Joining
+            -- for it keeps the scan's timestamp in exactly one place.
             JOIN scan_run r ON r.scan_run_id = rf.scan_run_id
             WHERE rf.scan_run_id = @id
             ON CONFLICT DO NOTHING

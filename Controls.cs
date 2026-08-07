@@ -64,8 +64,21 @@ public static class Controls
         (78479, "SI-2"),
     ];
 
+    /// <summary>
+    /// Loads the control catalogue and the plugin→control evidence map into the
+    /// database. Idempotent, so it runs on every startup without checking.
+    ///
+    /// The evidence map is the join key for this whole file. Without it the two
+    /// sources have nothing in common — the scanner talks about hosts and plugins,
+    /// the compliance record talks about controls, and nothing connects them. In
+    /// a real system this mapping is a maintained asset with an owner, because it
+    /// determines what the correlation can and cannot see.
+    /// </summary>
     public static async Task SeedCatalogAsync(NpgsqlConnection conn)
     {
+        // C# note: `foreach (var (id, title, family) in Catalog)` deconstructs
+        // each tuple into named locals in the loop header. Dapper then binds them
+        // by name from the anonymous object `new { id, title, family }`.
         foreach (var (id, title, family) in Catalog)
             await conn.ExecuteAsync("""
                 INSERT INTO control (control_id, title, family)
@@ -92,12 +105,26 @@ public static class Controls
     /// monitoring keeps seeing it. That asymmetry is where contradictions come from,
     /// and it is why this file does not hand-plant any.
     /// </summary>
+    /// <param name="exportId">
+    /// Fixed by the caller rather than generated, so re-running the program does
+    /// not accumulate near-identical exports — the same replay-safety reasoning
+    /// as the scan run ids.
+    /// </param>
+    /// <returns>How many control statuses were written.</returns>
     public static async Task<int> GenerateExportAsync(NpgsqlConnection conn, Guid exportId) =>
         await conn.ExecuteAsync("""
+            -- The assessment is dated to the FIRST scan, not the latest. That is
+            -- the entire mechanism: the compliance record is a photograph, the
+            -- scanner is a video, and by the time anyone reads them together the
+            -- photograph is five weeks old.
             WITH earliest AS (
                 SELECT scan_run_id, scanned_at
                 FROM scan_run ORDER BY scanned_at ASC LIMIT 1
             ),
+            -- Controls the assessor would have failed: those with high or
+            -- critical evidence at assessment time. severity >= 3 is the triage
+            -- line, and it is why medium and low findings never make it into the
+            -- compliance record even though the scanner keeps reporting them.
             serious_evidence AS (
                 SELECT DISTINCT pc.control_id
                 FROM finding f

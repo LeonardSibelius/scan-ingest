@@ -3,23 +3,38 @@ using Npgsql;
 
 namespace ScanIngest;
 
-/// <summary>
-/// Reconciles the POA&amp;M register against the most recent scan.
-///
-/// Three transitions, and all three matter:
-///   OPEN    — a finding in the latest scan with no POA&amp;M yet.
-///   REOPEN  — a finding that was closed and has come back. Not a new item;
-///             the same commitment, broken. Closing and re-opening as a fresh
-///             row would reset the clock and hide the recurrence.
-///   CLOSE   — a POA&amp;M whose finding no longer appears. Remediated.
-///
-/// The due date is derived from severity at open time and never recalculated,
-/// because the commitment was made on a date and moving it silently would be
-/// the single most dishonest thing this code could do.
-/// </summary>
+// =============================================================================
+// Poam.cs — the commitment register.
+//
+// Everything in Ingest.cs and Reports.cs deals in OBSERVATIONS: the scanner saw
+// this, on this machine, on this date. Observations are facts about the world and
+// nobody is accountable for them.
+//
+// A POA&M — Plan of Action and Milestones — is a COMMITMENT: a named person has
+// accepted a gap and promised a date. That difference drives everything here:
+//
+//                     finding                     poam
+//   keyed by     (scanned_at, host, plugin)  (host, plugin)
+//   partitioned  yes, by scan month          no
+//   lifetime     one scan                    outlives every scan that saw it
+//
+// A finding belongs to the scan that produced it. A commitment belongs to the
+// problem, and survives every scan in between — which is why it cannot be
+// partitioned by scan date and cannot be keyed on one.
+// =============================================================================
+
 public static class Poam
 {
-    /// Remediation SLA in days, by severity. Tunable per-programme in reality.
+    /// <summary>
+    /// Remediation deadline in days, by severity — the service level the
+    /// programme has committed to. Held as a SQL fragment rather than a C#
+    /// lookup because it is needed inside several queries, and computing it in
+    /// C# would mean pulling every row back to apply it.
+    ///
+    /// Real values are set per-programme and are frequently more aggressive than
+    /// these; the shape is what matters. Callers interpolate it after rewriting
+    /// the bare column name to a qualified one — see the <c>.Replace</c> calls.
+    /// </summary>
     public const string SlaCase = """
         CASE severity
             WHEN 4 THEN 15    -- critical
@@ -30,20 +45,53 @@ public static class Poam
         END
         """;
 
+    /// <summary>
+    /// Reconciles the register against the most recent scan. Called after every
+    /// ingest, not once at the end — a register that is only correct at the end
+    /// of a batch is a register that was wrong for the whole batch.
+    ///
+    /// Three transitions, and all three carry meaning:
+    ///
+    ///   OPEN    A finding in the latest scan with no commitment against it yet.
+    ///           Its clock starts from when the problem was FIRST observed, not
+    ///           from today — otherwise a long-standing gap would look fresh the
+    ///           moment somebody finally wrote it down.
+    ///
+    ///   REOPEN  A closed commitment whose finding has come back. Deliberately an
+    ///           UPDATE of the existing row rather than a new one. A fresh row
+    ///           would reset the clock and erase the recurrence, and a recurrence
+    ///           is exactly what an auditor is looking for — it means the fix did
+    ///           not hold, which is a different and worse fact than a new finding.
+    ///
+    ///   CLOSE   A commitment whose finding no longer appears. Remediated.
+    ///
+    /// The due date is computed once, at open time, and never recalculated. The
+    /// commitment was made on a date. Silently moving a deadline because severity
+    /// was re-rated or policy changed would be the most dishonest thing this code
+    /// could do, and it is the kind of thing that happens by accident when the
+    /// due date is derived on read instead of stored on write.
+    /// </summary>
+    /// <returns>Counts of what moved, so the caller can show the register living.</returns>
     public static async Task<PoamSyncResult> SyncAsync(NpgsqlConnection conn)
     {
+        // One transaction for the whole reconciliation. A crash between the open
+        // pass and the close pass would leave the register describing a state
+        // that never existed.
         await using var tx = await conn.BeginTransactionAsync();
 
-        // --- OPEN and REOPEN, in one upsert. ---
-        // Owner is assigned deterministically from the host so the same system
-        // always lands with the same ISSO. In production this is a lookup against
-        // the system inventory, not a hash.
-        // Not `const` — it interpolates SlaCase, which is a method call result.
+        // ---------------------------------------------------------------------
+        // OPEN and REOPEN — one upsert handles both.
+        // ---------------------------------------------------------------------
+        // C# note: this is `string`, not `const string`, because it interpolates
+        // SlaCase.Replace(...) — a method call, which is not a compile-time
+        // constant. `const` here is a compile error, and a slightly cryptic one.
         string openSql = $"""
             WITH latest AS (
                 SELECT scan_run_id, scanned_at
                 FROM scan_run ORDER BY scanned_at DESC LIMIT 1
             ),
+            -- When each problem was FIRST seen, across all history. This is the
+            -- clock start, and it is why the fact table keeps every scan.
             first_seen AS (
                 SELECT host, plugin_id, MIN(scanned_at)::date AS opened_on
                 FROM finding GROUP BY host, plugin_id
@@ -54,19 +102,34 @@ public static class Poam
                    f.plugin_id,
                    f.plugin_name,
                    f.severity,
+                   -- Owner assigned deterministically from the hostname, so the
+                   -- same machine always lands with the same ISSO across runs.
+                   -- In production this is a join against the system inventory;
+                   -- a hash stands in for that here. hashtext() is cast to bigint
+                   -- before abs() because hashtext can return int's minimum value,
+                   -- whose absolute value overflows int.
                    'ISSO-' || (ARRAY['Alpha','Bravo','Charlie','Delta','Echo','Foxtrot'])
                        [ mod(abs(hashtext(f.host)::bigint), 6) + 1 ],
                    fs.opened_on,
+                   -- Deadline = first observation + the SLA for this severity.
                    fs.opened_on + ({SlaCase.Replace("severity", "f.severity")})
             FROM finding f
             JOIN latest l      ON l.scan_run_id = f.scan_run_id
             JOIN first_seen fs ON fs.host = f.host AND fs.plugin_id = f.plugin_id
+            -- The conflict target is the natural key (host, plugin_id). DO UPDATE
+            -- with a WHERE clause makes this a reopen ONLY for rows that were
+            -- closed; a still-open commitment conflicts and is left completely
+            -- untouched, preserving its original owner and due date.
             ON CONFLICT ON CONSTRAINT poam_natural_key DO UPDATE
                 SET closed_on = NULL
                 WHERE poam.closed_on IS NOT NULL
             """;
 
-        // Count opens and reopens separately by checking the register first.
+        // Opens and reopens both come out of that single statement, so its row
+        // count cannot distinguish them. Counting the register before and after
+        // separates them: total growth is opens, and the fall in closed rows is
+        // reopens. Cheap, and it keeps the upsert as one statement rather than
+        // splitting it into two that could disagree.
         var beforeOpen = await conn.ExecuteScalarAsync<int>(
             "SELECT count(*)::int FROM poam", transaction: tx);
         var beforeClosed = await conn.ExecuteScalarAsync<int>(
@@ -82,7 +145,12 @@ public static class Poam
         var opened   = afterOpen - beforeOpen;
         var reopened = beforeClosed - afterClosed;
 
-        // --- CLOSE anything the latest scan no longer reports. ---
+        // ---------------------------------------------------------------------
+        // CLOSE — anything the latest scan no longer reports.
+        // ---------------------------------------------------------------------
+        // Closed as of the SCAN's date, not today's. The evidence of remediation
+        // is the scan; dating the closure to when the job happened to run would
+        // put a false precision on it.
         const string closeSql = """
             WITH latest AS (
                 SELECT scan_run_id, scanned_at
@@ -95,6 +163,8 @@ public static class Poam
             UPDATE poam p
             SET closed_on = (SELECT scanned_at::date FROM latest)
             WHERE p.closed_on IS NULL
+              -- NOT EXISTS rather than NOT IN: NOT IN against a set containing
+              -- any NULL evaluates to NULL and quietly matches nothing at all.
               AND NOT EXISTS (
                   SELECT 1 FROM current_findings c
                   WHERE c.host = p.host AND c.plugin_id = p.plugin_id
@@ -107,13 +177,23 @@ public static class Poam
         return new PoamSyncResult(opened, reopened, closed);
     }
 
-    /// Open items and how many have blown their due date, by severity.
+    /// <summary>
+    /// Open commitments per severity, and how many have blown their deadline.
+    ///
+    /// "As of" is the date of the most recent SCAN, not <c>now()</c>. If the
+    /// scanner has not run for three weeks then nothing has been observed for
+    /// three weeks, and ageing commitments against wall-clock time would invent
+    /// overdue days that no evidence supports.
+    /// </summary>
     public static async Task<IEnumerable<PoamStatusRow>> StatusAsync(NpgsqlConnection conn) =>
         await conn.QueryAsync<PoamStatusRow>($"""
             WITH asof AS (SELECT MAX(scanned_at)::date AS d FROM scan_run)
             SELECT p.severity AS Severity,
                    COUNT(*)   AS Open,
                    COUNT(*) FILTER (WHERE p.due_on < (SELECT d FROM asof)) AS Overdue,
+                   -- MAX() only because SlaCase is a per-row expression and this
+                   -- is a grouped query; every row in a severity group yields the
+                   -- same value, so any aggregate would do.
                    MAX({SlaCase.Replace("severity", "p.severity")}) AS SlaDays
             FROM poam p
             WHERE p.closed_on IS NULL
@@ -121,7 +201,15 @@ public static class Poam
             ORDER BY p.severity DESC
             """);
 
-    /// The worst offenders — what an AO actually asks to see.
+    /// <summary>
+    /// The worst overdue items, with enough context to act: owner, machine,
+    /// problem, deadline, and how late. This is the list an Authorizing Official
+    /// actually asks for — not a count, but names and dates.
+    /// </summary>
+    /// <param name="limit">
+    /// C# note: an optional parameter with a default. Callers can omit it, unlike
+    /// Java where this needs an overload.
+    /// </param>
     public static async Task<IEnumerable<PoamItemRow>> WorstOverdueAsync(
         NpgsqlConnection conn, int limit = 10) =>
         await conn.QueryAsync<PoamItemRow>("""
@@ -131,16 +219,26 @@ public static class Poam
                    p.plugin_id                               AS PluginId,
                    p.plugin_name                             AS PluginName,
                    p.severity                                AS Severity,
+                   -- Formatted in SQL: this value is only ever printed, and
+                   -- Npgsql's mapping for `date` has shifted between versions.
                    to_char(p.due_on, 'YYYY-MM-DD')           AS DueOn,
+                   -- date - date yields an integer number of days in Postgres.
                    ((SELECT d FROM asof) - p.due_on)::int    AS DaysOverdue
             FROM poam p
             WHERE p.closed_on IS NULL
               AND p.due_on < (SELECT d FROM asof)
+            -- Worst severity first, then longest overdue. Severity leads because
+            -- a critical two days late outranks an informational late by a year.
             ORDER BY p.severity DESC, DaysOverdue DESC
             LIMIT @limit
-            """, new { limit });
+            """, new { limit });   // anonymous object -> Dapper parameters
 
-    /// Overdue load per owner — the accountability view.
+    /// <summary>
+    /// Open and overdue load per accountable owner. The accountability view: not
+    /// "how broken is the system" but "who is carrying it, and who is drowning".
+    /// Sorted by overdue count, because that is the column that needs a
+    /// conversation.
+    /// </summary>
     public static async Task<IEnumerable<OwnerLoadRow>> ByOwnerAsync(NpgsqlConnection conn) =>
         await conn.QueryAsync<OwnerLoadRow>("""
             WITH asof AS (SELECT MAX(scanned_at)::date AS d FROM scan_run)
@@ -150,6 +248,6 @@ public static class Poam
             FROM poam p
             WHERE p.closed_on IS NULL
             GROUP BY p.owner
-            ORDER BY 3 DESC, 1
+            ORDER BY 3 DESC, 1   -- ordinals: 3rd column (overdue), then owner name
             """);
 }

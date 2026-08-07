@@ -117,18 +117,163 @@ and diffing row counts, not by assertion.
 
 ---
 
-## What each file demonstrates
+## A walk through the code
 
-| File | What it's showing |
-|---|---|
-| `Models.cs` | C# `record` types — Java 14+ records, same idea. Dapper maps result columns onto them by name. |
-| `Schema.cs` | The DDL. `jsonb` landing table with a GIN index, range-partitioned fact table, idempotent bootstrap. |
-| `Generator.cs` | Synthetic scans with realistic churn — findings persist, resolve, appear. Remediation is severity-weighted, so criticals age out fast and info findings linger. Seeded, so output is reproducible. |
-| `Ingest.cs` | **The important one.** Binary `COPY` into the landing table, then `INSERT … ON CONFLICT DO NOTHING` to normalise. |
-| `Reports.cs` | Four window-function queries via Dapper. |
-| `Poam.cs` | The commitment register — open / reopen / close reconciliation, and the overdue reports. |
-| `Controls.cs` | The second source. NIST 800-53 catalog, plugin→control evidence map, synthetic eMASS export, and the correlation. |
-| `Program.cs` | Top-level statements — no class, no `Main`. Modern C# idiom. |
+The source is heavily commented — every method carries a summary and the
+non-obvious SQL is annotated line by line. What follows is the tour: what each
+file is for, and what each method in it actually does.
+
+### `Models.cs` — the vocabulary
+
+Every type that crosses a boundary. Two kinds live here: **domain types** the
+pipeline moves around, and **report row types** that Dapper materialises straight
+from a query result.
+
+- **`Finding`** — one problem, on one machine. Keyed in practice by
+  `(host, plugin_id)`: a *plugin* is one specific check whose id is stable
+  forever, which is what makes a problem trackable across scans.
+- **`ScanRun`** — one execution of the scanner across the estate.
+- **`SeverityRow`, `DeltaRow`, `AgingRow`, `TrendRow`** — scan reporting.
+- **`PoamSyncResult`, `PoamStatusRow`, `OwnerLoadRow`, `PoamItemRow`** — the
+  commitment register.
+- **`CorrelationRow`, `UncoveredRow`** — the two-source comparison.
+
+The file header documents the **Dapper contract**, which explains every `AS Name`
+alias in the SQL: Dapper matches columns to constructor parameters by name,
+ignoring case and underscores, and *silently leaves a parameter at its default*
+when nothing matches. The aliases are not decoration.
+
+### `Schema.cs` — the argument, expressed as DDL
+
+The schema is what this project is really claiming, so most of the reasoning sits
+in the DDL comments rather than in prose.
+
+- **`EnsureDatabaseAsync`** — creates the database if absent. Connects to the
+  `postgres` maintenance database, because you cannot connect to a database in
+  order to create it. `CREATE DATABASE` has no `IF NOT EXISTS` form and cannot
+  take a parameter, so this is a look-then-leap with proper identifier quoting.
+- **`EnsureSchemaAsync`** — applies the whole DDL block in one round trip. Every
+  statement is `CREATE … IF NOT EXISTS`, so it is safe on every deploy.
+- **`EnsurePartitionAsync`** — creates the monthly partition a scan needs.
+  Postgres rejects an insert whose partition key falls outside every defined
+  partition, so this runs before each ingest. **The UTC offsets on the boundary
+  literals are load-bearing** — see the bugs section below.
+
+### `Generator.cs` — synthetic data with a churn model
+
+Not a stub. The interesting queries are all about *change*, and change needs
+history, so getting the churn model wrong makes every report lie.
+
+- **`NextScan(first)`** — produces the next scan. The first call seeds 4–11
+  findings per host; every later call ages the population. Remediation is
+  **severity-weighted** (34% of criticals per scan, 4% of informationals),
+  because triage is real and a flat rate makes the aging report flat-line at one
+  number for every severity. New findings are counted by what was genuinely
+  *added* rather than by attempts, since a random pick that is already open is a
+  collision, not a finding.
+- **`NextScanReplay()`** — returns the current open set unchanged. Exists solely
+  to test idempotency, and is deliberately separate so that replaying cannot
+  accidentally advance the simulation.
+- **`Materialise()`** — turns internal state into `Finding` records and sorts
+  them. The sort matters: a `HashSet` has no defined iteration order.
+
+### `Ingest.cs` — fast, and exactly once
+
+The two-stage load, and the file most worth reading.
+
+- **`IngestAsync(conn, run, findings)`** — loads one scan inside one transaction,
+  and returns how many rows actually landed. Zero on a replay.
+
+  Stage 1 is a **binary `COPY`** into the `jsonb` landing table — Postgres's own
+  wire format, roughly an order of magnitude faster than row-by-row `INSERT`.
+  Stage 2 is an `INSERT … SELECT` out of the landing table with
+  **`ON CONFLICT DO NOTHING`**.
+
+  Why two stages, when one would be simpler: **`COPY` cannot express
+  `ON CONFLICT`.** You can have bulk speed or conflict handling in a single
+  statement, not both. The landing table is the structural consequence of that one
+  limitation — not staging-because-that's-what-people-do.
+
+### `Reports.cs` — the read side
+
+Dapper over hand-written SQL. The SQL *is* the logic; hiding it behind an ORM
+would mean writing the same query worse and then obscuring it.
+
+- **`BySeverityAsync`** — open findings per severity, latest scan only.
+- **`DeltaAsync`** — new / resolved / still-open against the previous scan.
+  `ROW_NUMBER() OVER (ORDER BY scanned_at DESC)` picks the last two runs with no
+  dates hardcoded, and a **`FULL OUTER JOIN`** is what makes all three categories
+  fall out of one query — an inner join would silently lose the two interesting
+  ones.
+- **`AgingAsync`** — how long open findings have been open. Measured from the
+  *first observation*, not from row insertion, so it reports on the problem rather
+  than on the pipeline.
+- **`TrendAsync`** — high+critical per scan with the run-over-run change.
+  Demonstrates **`LAG()` over an aggregate**: group first, then window over the
+  groups. The first row's delta is `NULL` and stays `NULL`, because "no change
+  recorded" and "change of zero" are different statements.
+- **`TotalFactRowsAsync`** — a row count. Crude, and the exact invariant that
+  would have caught the replay bug this pipeline originally shipped with.
+
+### `Poam.cs` — commitments, not observations
+
+Everything above deals in observations: the scanner saw this, here, then. Nobody
+is accountable for an observation. A POA&M is a *commitment* — a named person has
+accepted a gap and promised a date.
+
+- **`SlaCase`** — the remediation deadline per severity (15/30/90/180/365 days),
+  held as a SQL fragment because several queries need it and computing it in C#
+  would mean pulling every row back to apply it.
+- **`SyncAsync`** — reconciles the register against the latest scan, in one
+  transaction, returning what moved. Three transitions:
+  - **open** — a finding with no commitment yet. Its clock starts from when the
+    problem was *first observed*, not from today, so a long-standing gap does not
+    look fresh the moment somebody finally writes it down.
+  - **reopen** — a closed commitment whose finding returned. An `UPDATE` of the
+    existing row, never a new one: a fresh row would reset the clock and erase the
+    recurrence, and a recurrence means the fix did not hold, which is a worse fact
+    than a new finding.
+  - **close** — dated to the *scan's* date, not to `now()`. The scan is the
+    evidence.
+
+  Due dates are computed once at open time and never recalculated. The commitment
+  was made on a date.
+- **`StatusAsync`** — open and overdue per severity. "As of" is the latest scan,
+  not wall-clock: if the scanner has not run for three weeks, nothing has been
+  observed for three weeks, and ageing against `now()` would invent overdue days
+  no evidence supports.
+- **`WorstOverdueAsync`** — names, machines, deadlines and days late. What an
+  Authorizing Official actually asks for.
+- **`ByOwnerAsync`** — load per owner. Not "how broken is the system" but "who is
+  carrying it, and who is drowning".
+
+### `Controls.cs` — the second source, and the correlation
+
+- **`Catalog` / `Evidence`** — ten NIST 800-53 controls and the many-to-many map
+  from scanner plugins to the controls they bear on. **This map is the join key
+  for the whole file** — without it the two sources share nothing, since one talks
+  about hosts and plugins and the other about controls. It is deliberately
+  incomplete in both directions, and both gaps show up in the output.
+- **`SeedCatalogAsync`** — loads both into the database, idempotently.
+- **`GenerateExportAsync`** — writes the synthetic eMASS export, dated to the
+  **first** scan. That staleness is the mechanism: the compliance record is a
+  photograph, the scanner is a video. The assessor fails a control only on
+  `severity >= 3` evidence, which is how triage genuinely works — and it means
+  medium and low findings never reach the compliance record while the scanner
+  reports them forever. **The contradictions fall out of that asymmetry rather
+  than being planted.**
+- **`CorrelateAsync`** — the payload. Five verdicts, described in the correlation
+  section above. The `coverage` CTE counts how many plugins can speak to each
+  control *at all*, which is what separates `not assessable` from
+  `verified clean`.
+- **`UncoveredAsync`** — the mirror-image gap: findings mapping to no tracked
+  control. Either the mapping is incomplete or the package is.
+
+### `Program.cs` — the sequence
+
+Top-level statements: no class, no `Main`. Bootstraps the schema, ingests six
+scans while reconciling the register after each, proves idempotency by replaying
+the last scan, then prints the ten report sections in order.
 
 ---
 
