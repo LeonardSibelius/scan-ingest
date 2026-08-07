@@ -1,22 +1,84 @@
 # scan-ingest
 
-A small NIST RMF continuous-monitoring pipeline in **C# and Postgres**, built to
-learn the domain by implementing it rather than reading about it.
+**A pipeline that finds the places where the security paperwork and the security
+scanner disagree.** C# and Postgres. All data synthetic.
 
-It generates synthetic Nessus-style scan findings across six weekly scans, lands
-them as `jsonb`, projects them into a partitioned fact table, maintains a POA&M
-register with owners and due dates, and correlates all of it against a second
-source — an eMASS control-status export — to find the places where the compliance
-record and the scanner disagree.
+## The problem, in plain language
+
+A federal computer system needs formal permission to operate. Getting that
+permission means proving that a long list of security requirements is satisfied —
+and then proving, week after week, that it still is.
+
+Two very different things produce that evidence:
+
+- **A vulnerability scanner** crawls every machine on a schedule and reports what
+  is broken. Automatic, current, and enormous — thousands of findings.
+- **A human assessor** reviews the system against a checklist of security
+  *controls* and records a verdict for each one. Thorough, authoritative, and
+  going stale from the moment it is written.
+
+Both feed the paperwork that keeps the system authorised. **Neither agrees with
+the other**, because one runs weekly and the other runs quarterly, and because a
+human triaging a control assessment reasonably ignores the low-severity noise that
+a scanner reports forever.
+
+The gap between them is not a data-quality problem to be cleaned up. It is the
+most useful thing either source produces:
+
+> A control the assessor marked **satisfied**, that the scanner says is **broken**,
+> means the authorisation paperwork is describing a system that no longer exists.
+
+This project ingests both sources, tracks what has been promised and by when, and
+reports the contradictions. Here is the output that matters:
+
+```
+control eMASS says     sources findings  hosts  verdict
+CM-6    Compliant            2       30     26  CONTRADICTED  <-- Configuration Settings
+IA-5    Compliant            0        0      0  not assessable  (no scanner can see this)
+AC-2    Compliant            0        0      0  not assessable
+SC-8    Non-Compliant        6       72     36  corroborated
+SC-17   Non-Compliant        6       84     39  corroborated
+```
+
+One control is claimed compliant and contradicted by live evidence. Four are
+claimed compliant but **nothing could have checked them** — they are procedural,
+and no scanner will ever see them. Five are known-bad and correctly tracked.
+
+Not one control in that package is both claimed compliant *and* actually verified.
+
+## The vocabulary
+
+Five terms and the rest of this file reads normally:
+
+| Term | What it means |
+|---|---|
+| **RMF** | Risk Management Framework. NIST SP 800-37 — the process a federal system walks to get and keep permission to run. |
+| **ATO** | Authority to Operate. That permission. No ATO, no production system. |
+| **Control** | One security requirement from the NIST SP 800-53 catalogue, e.g. `SC-8`, "Transmission Confidentiality and Integrity". |
+| **POA&M** | Plan of Action and Milestones. The register of known gaps — each with an owner and a date they promised to fix it by. |
+| **eMASS** | The Department of Defense system of record holding all of the above for a given system. |
+
+The scanner here is modelled on **Nessus**, the vulnerability scanner most widely
+used in this space. A *finding* is one problem on one machine.
+
+## What it actually does
+
+Six weekly scans of forty hosts are generated with realistic churn — findings
+persist, get remediated, and reappear. Each scan is landed as raw `jsonb`,
+projected into a partitioned fact table, and reconciled against a POA&M register
+that opens, closes and reopens commitments. A synthetic eMASS export provides the
+second source, and the two are correlated.
 
 Every design decision below is argued for, including the two that were wrong the
-first time.
+first time and had to be fixed.
 
 ---
 
 ## Setup
 
-Neither .NET nor Postgres is on this machine yet. Both install from `winget`.
+You need the **.NET 8 SDK** and a **PostgreSQL server**. On Windows both install
+from `winget`; on macOS or Linux use your usual package manager, or run Postgres
+in Docker.
 
 **1. .NET 8 SDK** (no admin needed):
 
@@ -30,11 +92,17 @@ winget install Microsoft.DotNet.SDK.8
 winget install PostgreSQL.PostgreSQL.17
 ```
 
-Note the superuser password the installer sets. If it isn't `postgres`, point the
-app at the right one:
+The app defaults to `postgres` / `postgres` on `localhost:5432`. If your superuser
+password differs, point it at the right one — PowerShell:
 
 ```bash
 $env:SCANPREP_CONN = "Host=localhost;Port=5432;Username=postgres;Password=YOURPASSWORD"
+```
+
+or bash:
+
+```bash
+export SCANPREP_CONN="Host=localhost;Port=5432;Username=postgres;Password=YOURPASSWORD"
 ```
 
 **3. Run it** — from the repository root, in a fresh terminal so PATH picks up `dotnet`:
