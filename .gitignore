@@ -1,0 +1,19 @@
+# .NET build output
+bin/
+obj/
+*.user
+*.suo
+*.userprefs
+
+# Rider / VS / VS Code
+.idea/
+.vs/
+.vscode/
+
+# NuGet
+*.nupkg
+packages/
+
+# OS
+Thumbs.db
+.DS_Store

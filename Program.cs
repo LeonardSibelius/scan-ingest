@@ -1,0 +1,174 @@
+using Npgsql;
+using ScanIngest;
+
+// C# top-level statements — no class, no Main. The compiler wraps this for you.
+// Modern C# idiom; you will see it in anything written since .NET 6.
+
+const string DbName = "scanprep";
+
+// Connection string comes from the environment if set, otherwise a local default.
+// Never hardcode credentials in a real one — this is a scratch database.
+var baseConn = Environment.GetEnvironmentVariable("SCANPREP_CONN")
+               ?? "Host=localhost;Port=5432;Username=postgres;Password=postgres";
+
+var adminConn = $"{baseConn};Database=postgres";
+var appConn   = $"{baseConn};Database={DbName}";
+
+Console.WriteLine("scan-ingest — a small ConMon pipeline in C# and Postgres");
+Console.WriteLine(new string('=', 62));
+
+// ---------------------------------------------------------------- bootstrap
+Console.WriteLine("\n[1] schema");
+await Schema.EnsureDatabaseAsync(adminConn, DbName);
+
+await using var conn = new NpgsqlConnection(appConn);
+await conn.OpenAsync();
+await Schema.EnsureSchemaAsync(conn);
+Console.WriteLine("  landing table (jsonb), partitioned fact table, indexes — ready");
+
+// ------------------------------------------------------------------ ingest
+Console.WriteLine("\n[2] ingest — six weekly scans, reconciling the POA&M register after each");
+Console.WriteLine($"  {"scan",-12} {"raw",6} {"facts",8}   POA&M  open / reopen / close");
+
+var generator = new Generator();
+var runs      = new List<ScanRun>();
+
+// Anchor the scan dates to a FIXED point, not UtcNow. With UtcNow, two runs of
+// this program minutes apart produce timestamps that differ by minutes — and
+// since scanned_at is part of the fact table's primary key, nothing collides and
+// every row inserts a second time. Re-running silently doubled the data.
+//
+// Deterministic timestamps plus deterministic run ids make replay a no-op, which
+// is what "idempotent" has to mean for a pipeline that gets re-driven.
+var startedAt = new DateTimeOffset(2026, 7, 3, 9, 0, 0, TimeSpan.Zero);
+
+static Guid DeterministicRunId(string source, DateTimeOffset at)
+{
+    var bytes = System.Security.Cryptography.MD5.HashData(
+        System.Text.Encoding.UTF8.GetBytes($"{source}|{at:O}"));
+    return new Guid(bytes);
+}
+
+for (var week = 0; week < 6; week++)
+{
+    var scannedAt = startedAt.AddDays(week * 7);
+    var run = new ScanRun(
+        ScanRunId: DeterministicRunId("acas-nessus", scannedAt),
+        ScannedAt: scannedAt,
+        Source:    "acas-nessus");
+
+    var findings = generator.NextScan(first: week == 0);
+    var inserted = await Ingest.IngestAsync(conn, run, findings);
+
+    // Reconcile the commitment register on every ingest, not once at the end.
+    // This is what makes the close and reopen paths real rather than decorative.
+    var sync = await Poam.SyncAsync(conn);
+    runs.Add(run);
+
+    Console.WriteLine(
+        $"  {run.ScannedAt:yyyy-MM-dd} {findings.Count,7} {inserted,8}"
+        + $"   +{sync.Opened,-4} ~{sync.Reopened,-4} -{sync.Closed}");
+}
+
+Console.WriteLine($"  total fact rows: {await Reports.TotalFactRowsAsync(conn)}");
+
+// ------------------------------------------------------- idempotency check
+// Re-ingest the final scan verbatim. If the primary key is doing its job, the
+// row count does not move. This is the claim worth being able to demonstrate:
+// scans get re-run and re-delivered, and a pipeline that double-counts on
+// replay will quietly corrupt every number downstream.
+Console.WriteLine("\n[3] idempotency — re-ingesting the last scan");
+
+var before  = await Reports.TotalFactRowsAsync(conn);
+var replay  = await Ingest.IngestAsync(conn, runs[^1], generator.NextScanReplay());
+var after   = await Reports.TotalFactRowsAsync(conn);
+
+Console.WriteLine($"  before {before}, re-inserted {replay}, after {after}"
+                  + (before == after ? "   OK — no double counting" : "   MISMATCH"));
+
+// ----------------------------------------------------------------- reports
+Console.WriteLine("\n[4] open findings by severity — latest scan");
+foreach (var r in await Reports.BySeverityAsync(conn))
+    Console.WriteLine($"  {r.Label,-9} {r.N,6}");
+
+Console.WriteLine("\n[5] change since previous scan");
+foreach (var r in await Reports.DeltaAsync(conn))
+    Console.WriteLine($"  {r.Status,-11} {r.N,6}");
+
+Console.WriteLine("\n[6] POA&M aging — how long has each open finding been open");
+Console.WriteLine($"  {"severity",-9} {"count",6} {"avg days",10}");
+foreach (var r in await Reports.AgingAsync(conn))
+{
+    var label = r.Severity switch
+    {
+        4 => "critical", 3 => "high", 2 => "medium", 1 => "low", _ => "info"
+    };
+    Console.WriteLine($"  {label,-9} {r.N,6} {r.AvgDaysOpen,10:F1}");
+}
+
+Console.WriteLine("\n[7] high+critical trend, run over run  (LAG window function)");
+Console.WriteLine($"  {"scan date",-12} {"high+crit",10} {"change",8}");
+foreach (var r in await Reports.TrendAsync(conn))
+{
+    var delta = r.Delta is null ? "  —" : (r.Delta > 0 ? $"+{r.Delta}" : $"{r.Delta}");
+    Console.WriteLine($"  {r.ScannedAt:yyyy-MM-dd}   {r.HighCrit,10} {delta,8}");
+}
+
+// -------------------------------------------------------------------- POA&M
+// Findings are observations. A POA&M is a commitment — an owner and a date.
+// This is where the pipeline stops describing the estate and starts holding
+// people to something.
+Console.WriteLine("\n[8] open POA&Ms against remediation SLA");
+Console.WriteLine($"  {"severity",-9} {"open",6} {"overdue",8} {"SLA days",9}");
+foreach (var r in await Poam.StatusAsync(conn))
+    Console.WriteLine($"  {r.Label,-9} {r.Open,6} {r.Overdue,8} {r.SlaDays,9}");
+
+Console.WriteLine("\n[9] overdue load by owner");
+Console.WriteLine($"  {"owner",-16} {"open",6} {"overdue",8}");
+foreach (var o in await Poam.ByOwnerAsync(conn))
+    Console.WriteLine($"  {o.Owner,-16} {o.Open,6} {o.Overdue,8}");
+
+Console.WriteLine("\n[10] worst overdue items — what an AO asks to see");
+Console.WriteLine($"  {"owner",-14} {"host",-16} {"severity",-9} {"due",-11} {"late",5}  plugin");
+foreach (var i in await Poam.WorstOverdueAsync(conn))
+{
+    var label = i.Severity switch
+    {
+        4 => "critical", 3 => "high", 2 => "medium", 1 => "low", _ => "info"
+    };
+    Console.WriteLine(
+        $"  {i.Owner,-14} {i.Host,-16} {label,-9} {i.DueOn,-11} {i.DaysOverdue,5}  {i.PluginName}");
+}
+
+// ------------------------------------------------- second source + correlation
+// Everything above reads one source. This is where it becomes a correlation
+// engine: the scanner's view of the estate against the assessor's view of the
+// controls, and the places they disagree.
+Console.WriteLine("\n[11] second source — eMASS control-status export");
+await Controls.SeedCatalogAsync(conn);
+var exported = await Controls.GenerateExportAsync(
+    conn, new Guid("7f9d2c10-0000-4000-8000-000000000001"));
+Console.WriteLine($"  control catalog seeded, {exported} control statuses exported");
+Console.WriteLine("  (assessment dated to the FIRST scan — five weeks stale, as they are)");
+
+Console.WriteLine("\n[12] correlation — scanner vs. compliance record");
+Console.WriteLine(
+    $"  {"control",-7} {"eMASS says",-14} {"sources",7} {"findings",8} {"hosts",6}  verdict");
+foreach (var c in await Controls.CorrelateAsync(conn))
+{
+    var flag = c.Verdict switch
+    {
+        "CONTRADICTED"   => "  <-- " + c.Title,
+        "not assessable" => "  (" + c.Title + " — no scanner can see this)",
+        _                => ""
+    };
+    Console.WriteLine(
+        $"  {c.ControlId,-7} {c.Compliance,-14} {c.EvidenceSources,7} {c.Findings,8} "
+        + $"{c.HostsAffected,6}  {c.Verdict}{flag}");
+}
+
+Console.WriteLine("\n[13] coverage gap — findings that map to no tracked control");
+foreach (var u in await Controls.UncoveredAsync(conn))
+    Console.WriteLine($"  plugin {u.PluginId,-7} {u.Findings,5} findings   {u.PluginName}");
+
+Console.WriteLine("\ndone.");
