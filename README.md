@@ -61,6 +61,11 @@ Five terms and the rest of this file reads normally:
 The scanner here is modelled on **Nessus**, the vulnerability scanner most widely
 used in this space. A *finding* is one problem on one machine.
 
+**New to this?** [**TUTORIAL.md**](TUTORIAL.md) walks through the whole thing in
+small steps — install it, run it, then follow one critical finding from raw
+scanner output all the way to an overdue report, querying the database yourself at
+each stage. No prior security, C# or Postgres knowledge assumed.
+
 ## What it actually does
 
 Six weekly scans of forty hosts are generated with realistic churn — findings
