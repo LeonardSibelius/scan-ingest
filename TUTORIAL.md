@@ -83,22 +83,49 @@ The interesting one is the third. The first two are how you earn the right to it
 
 ### Step 4 — Open a database session
 
-Everything from here happens at the Postgres prompt. Open one:
+Everything from here happens at the Postgres prompt.
+
+**Run ONE of the following — whichever matches your machine.** They do the same
+thing; the Windows one just needs the full path, because the installer does not
+put `psql` on your `PATH`.
+
+**On Windows** (PowerShell):
 
 ```bash
 $env:PGPASSWORD='postgres'; & "C:\Program Files\PostgreSQL\17\bin\psql.exe" -U postgres -d scanprep
 ```
 
-On macOS/Linux:
+**On macOS or Linux:**
 
 ```bash
 psql -U postgres -d scanprep
 ```
 
 Your prompt changes to `scanprep=#`. **Leave this window open** — the rest of the
-tutorial pastes queries into it.
+tutorial pastes queries into it. Open a second terminal when you need to run
+`dotnet run` again.
 
-Two things to know: every SQL statement ends with a semicolon, and `\q` quits.
+#### Reading the prompt
+
+From here on you are talking to the database, not to your shell. Shell commands
+typed here will not work. The prompt tells you what psql is waiting for:
+
+| Prompt | Meaning |
+|---|---|
+| `scanprep=#` | Ready for a new statement. This is the normal state. |
+| `scanprep-#` | Mid-statement — it is waiting for you to finish and add a `;`. |
+| `scanprep'#` | You have an unclosed quote. |
+| `scanprep(#` | You have an unclosed bracket. |
+
+**If you end up on any prompt other than `=#` and you did not mean to, press
+Ctrl+C.** That discards whatever is half-typed and returns you to `=#`. Nothing is
+harmed — the most common cause is pasting something that is not SQL.
+
+Two more things: every SQL statement ends with a semicolon, and `\q` quits.
+
+> **A warning you can ignore on Windows.** psql may print *"Console code page (437)
+> differs from Windows code page (1252)"*. It is cosmetic — it only affects how
+> accented characters display, and there are none in this data.
 
 ---
 
@@ -625,3 +652,12 @@ run with different code. Do Step 17.
 **`psql` is not found on Windows** — it is not added to `PATH` by the installer.
 Use the full path shown in Step 4, or add `C:\Program Files\PostgreSQL\17\bin` to
 your `PATH`.
+
+**The psql prompt shows `-#` and nothing I type works** — psql is waiting for you
+to finish a statement. Usually you pasted something that is not SQL, or left off a
+semicolon. Press **Ctrl+C** to discard it and get back to `scanprep=#`.
+
+**`syntax error at or near "psql"`** — you pasted a shell command into the database
+prompt. The psql session and your shell are two different things; `dotnet run` and
+`psql` belong in a shell, everything after Step 4 belongs at the `scanprep=#`
+prompt. Keep two terminals open.
