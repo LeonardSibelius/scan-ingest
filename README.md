@@ -1,11 +1,16 @@
 # scan-ingest
 
-A small continuous-monitoring pipeline in **C# and Postgres** — the shape of what
-IPKeys CLaaS does, at a size you can hold in your head.
+A small NIST RMF continuous-monitoring pipeline in **C# and Postgres**, built to
+learn the domain by implementing it rather than reading about it.
 
 It generates synthetic Nessus-style scan findings across six weekly scans, lands
-them as `jsonb`, projects them into a partitioned fact table, and reports on what
-changed. Every design decision in here is one you can talk about in the interview.
+them as `jsonb`, projects them into a partitioned fact table, maintains a POA&M
+register with owners and due dates, and correlates all of it against a second
+source — an eMASS control-status export — to find the places where the compliance
+record and the scanner disagree.
+
+Every design decision below is argued for, including the two that were wrong the
+first time.
 
 ---
 
@@ -225,9 +230,15 @@ Partition pruning **is** already working — filtering on an August date scans o
 
 ---
 
-## If you want to go further
+## Where this would go next
 
-- Add a `POA&M` table with owner and due date, and compute overdue counts.
-- Add a second `source` (a fake eMASS control export) and correlate the two —
-  that correlation is literally what CLaaS's engine does.
+- **Parse real SCAP/XCCDF** instead of generating findings. The landing table
+  already tolerates whatever shape shows up, which was the point of it.
+- **Control inheritance** — common controls provided by the hosting enclave are
+  inherited rather than assessed per-system, and the correlation currently has no
+  concept of that. It would change which contradictions are real.
+- **ATO expiry and reauthorisation windows**, so the register can answer "what
+  blocks reauthorisation in ninety days" rather than only "what is overdue now."
+- **A third source**: STIG checklist results, which overlap the scanner
+  imperfectly and would make the correlation genuinely three-way.
 - Swap the console output for a minimal ASP.NET Core endpoint returning JSON.
