@@ -37,12 +37,9 @@ namespace ScanIngest;
 //                row is already here, skip it quietly rather than fail. That is
 //                what makes re-loading the same scan harmless.
 //
-// COPY has no ON CONFLICT clause. Not disabled, not discouraged — the command
-// simply does not have one. So a single COPY straight into `finding` would be
-// fast, and would fail the second time anybody ran it.
-//
-// Hence two tables. raw_finding is a scratch pad with no keys and no rules (a
-// "landing table", in the usual jargon), so COPY can pour into it at full speed.
+// COPY has no ON CONFLICT clause. Hence two tables. raw_finding is a scratch pad
+// with no keys and no rules (a "landing table", in the usual jargon),
+// so COPY can pour into it at full speed.
 // Then one ordinary INSERT moves the data across into `finding` — and an INSERT
 // is allowed to say ON CONFLICT DO NOTHING.
 //
@@ -57,7 +54,7 @@ public static class Ingest
     /// </summary>
     /// <param name="run">
     /// Scan metadata. Its <c>ScanRunId</c> must be deterministic for replay
-    /// safety — see the note in Program.cs about why random ids broke this.
+    /// safety — see the note in Program.cs about what a random id would do here.
     /// </param>
     /// <returns>
     /// How many rows actually landed in the fact table. Zero on a replay, which
