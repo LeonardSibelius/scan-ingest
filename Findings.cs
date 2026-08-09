@@ -4,23 +4,15 @@ using Npgsql;
 namespace ScanIngest;
 
 // =============================================================================
-// Findings.cs — questions about what the scanner saw.
+// Findings.cs holds five of the project's ten reports.
+// The other five live in Poam.cs and Controls.cs.
 //
-// This file was called Reports.cs, and that name was wrong. It holds five of the
-// project's ten reports; the other five live in Poam.cs and Controls.cs. A reader
-// who saw "Reports" reasonably expected all of them, counted five, and went
-// looking for the rest.
-//
-// Every other file here is named for its SUBJECT — Poam, Controls, Ingest,
+// Files in this project are named by SUBJECT — Poam, Controls, Ingest,
 // Schema, Generator, PluginCatalog — and each owns that subject end to end.
 // Poam.cs both writes commitments and reads them back. This file is the odd one
 // out only because findings are written elsewhere, by Ingest.cs.
 //
-// Three subjects, three files. Reports about a thing live with the thing.
-//
-// NOTICE WHAT IS NOT HERE ANY MORE.
-//
-// This file used to be mostly SQL. The SQL now lives once, in queries.sql, and
+// The SQL lives in queries.sql, and
 // what remains is everything that is NOT SQL — which turns out to be the actual
 // job of this file:
 //
