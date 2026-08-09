@@ -149,7 +149,10 @@ public static class Controls
                    'SCA-Team-1'
             FROM control c
             LEFT JOIN serious_evidence se ON se.control_id = c.control_id
-            ON CONFLICT (exported_at, control_id) DO NOTHING
+            -- Conflict target matches the primary key: an export is identified by
+            -- its id, not its date. Re-running this is a no-op; a genuinely
+            -- different export on the same date would still be accepted.
+            ON CONFLICT (export_id, control_id) DO NOTHING
             """, new { exportId });
 
         // Report what the export holds, not what this call happened to add.
@@ -178,8 +181,15 @@ public static class Controls
             WITH latest_scan AS (
                 SELECT scan_run_id FROM scan_run ORDER BY scanned_at DESC LIMIT 1
             ),
+            -- Pick ONE export and join on its id. Selecting by date alone would
+            -- return every row of every export sharing that date, which is exactly
+            -- the case the primary key now permits. export_id breaks the tie
+            -- deterministically so the same assessment is chosen every run.
             latest_export AS (
-                SELECT exported_at FROM control_status ORDER BY exported_at DESC LIMIT 1
+                SELECT export_id
+                FROM control_status
+                ORDER BY exported_at DESC, export_id
+                LIMIT 1
             ),
             -- How many plugins CAN speak to each control. Zero means the scanner
             -- has no opinion and never will — the distinction the verdict turns on.
@@ -216,7 +226,7 @@ public static class Controls
                        ELSE 'verified clean'
                    END                                 AS Verdict
             FROM control_status cs
-            JOIN latest_export le ON le.exported_at = cs.exported_at
+            JOIN latest_export le ON le.export_id = cs.export_id
             JOIN control c        ON c.control_id = cs.control_id
             LEFT JOIN coverage cv         ON cv.control_id = cs.control_id
             LEFT JOIN control_evidence ce ON ce.control_id = cs.control_id

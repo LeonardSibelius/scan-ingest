@@ -177,14 +177,37 @@ public static class Schema
         );
 
         -- An eMASS control-status export. One row per control per export.
+        --
+        -- Keyed on (export_id, control_id), NOT on the export date. An export is
+        -- identified by what it is, not by when it happened: two assessments can
+        -- legitimately share a date — a correction, or a re-run after a finding
+        -- was disputed — and keying on the date would silently discard the second.
+        --
+        -- compliance is CHECK-constrained rather than free text. The correlation
+        -- in Controls.cs compares it literally against 'Compliant', so a stray
+        -- 'compliant' or 'COMPLIANT' would not error; it would fall through to a
+        -- different branch and report the wrong verdict. In a system whose entire
+        -- job is catching a mismatch between two sources, a typo in one of them
+        -- must not be allowed to defeat it quietly.
+        --
+        -- The permitted list is exactly what CorrelateAsync knows how to handle.
+        -- Adding a value here — 'Not Applicable' and 'Not Assessed' are both real
+        -- eMASS statuses — means extending that CASE expression at the same time,
+        -- or the new value falls into the ELSE branch and reports as clean.
         CREATE TABLE IF NOT EXISTS control_status (
             export_id   uuid        NOT NULL,
             exported_at timestamptz NOT NULL,
             control_id  text        NOT NULL REFERENCES control(control_id),
-            compliance  text        NOT NULL,
+            compliance  text        NOT NULL
+                        CHECK (compliance IN ('Compliant', 'Non-Compliant')),
             assessed_by text,
-            PRIMARY KEY (exported_at, control_id)
+            PRIMARY KEY (export_id, control_id)
         );
+
+        -- Supports "find the most recent export", which is how the correlation
+        -- chooses which assessment to compare against.
+        CREATE INDEX IF NOT EXISTS control_status_exported_at_idx
+            ON control_status (exported_at DESC);
         """;
 
     /// <summary>
