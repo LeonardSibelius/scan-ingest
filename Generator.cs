@@ -19,14 +19,22 @@ namespace ScanIngest;
 /// program is reproducible — the same numbers appear in the README, in the
 /// commit history, and on your screen.
 /// </summary>
+// C#: `sealed` = Java `final` on a class. Nobody can subclass this.
 public sealed class Generator
 {
     // Fixed seed. Reproducibility is worth more than variety here: it means the
     // documented output and the actual output can be compared.
+    //
+    // C#: `new(20260807)` with no type name — the type is already on the left,
+    // C#: so C# infers it. Longhand is `new Random(20260807)`.
     private readonly Random _rng = new(20260807);
 
-    // Forty machines. `$"host-{i:D3}.mil"` is string interpolation with a format
-    // specifier — D3 zero-pads to three digits, giving host-001 through host-040.
+    // Forty machines: host-001.mil through host-040.mil.
+    //
+    // C#: Enumerable.Range(1,40) makes 1..40. `.Select(...)` is Java's `.map()`.
+    // C#: `i => ...` is a lambda; Java writes `i -> ...`. One character apart.
+    // C#: `$"...{i:D3}..."` is string interpolation — Java's String.format.
+    // C#: The `:D3` part means "pad to 3 digits", so 7 becomes 007.
     private readonly string[] _hosts =
         Enumerable.Range(1, 40).Select(i => $"host-{i:D3}.mil").ToArray();
 
@@ -34,9 +42,11 @@ public sealed class Generator
     // plugin is one specific check, and its id is stable forever, which is what
     // makes a finding trackable across scans.
     //
-    // C# note: `[ ... ]` is a collection expression (C# 12) — shorthand for
-    // `new (int, string, short)[] { ... }`. The elements are value tuples with
-    // named members, so `_plugins[i].Severity` works without declaring a type.
+    // C#: `(int Id, string Name, short Severity)` is a TUPLE type — an ad-hoc
+    // C#: group of values with names, no class needed. Java has no equivalent;
+    // C#: you would declare a record or a small class.
+    // C#: `[ ... ]` is a collection expression — shorthand for `new T[] { ... }`.
+    // C#: Access the parts by name: `_plugins[3].Severity`.
     private readonly (int Id, string Name, short Severity)[] _plugins =
     [
         (10107, "HTTP Server Type and Version",              0),
@@ -78,6 +88,11 @@ public sealed class Generator
     // A HashSet of (host, pluginIndex) gives free deduplication — the same
     // problem cannot be open twice on the same machine, which is exactly the
     // real-world constraint.
+    //
+    // C#: This works because C# tuples have VALUE equality built in — two tuples
+    // C#: holding the same contents are equal, so the set can spot duplicates.
+    // C#: In Java you would need a record, or equals()/hashCode() by hand.
+    // C#: `= []` is just an empty set. Longhand: `new HashSet<...>()`.
     private HashSet<(string Host, int PluginIdx)> _open = [];
 
     /// <summary>
@@ -109,11 +124,18 @@ public sealed class Generator
             // plugins (20), so there is always another distinct pair available.
             // Raise that ceiling past _plugins.Length and this loop will hang.
             _open = [];
+
+            // C#: `foreach (var x in list)` is Java's `for (T x : list)`.
+            // C#: `var` infers the type — here it is string.
             foreach (var host in _hosts)
             {
+                // C#: Next(4, 12) gives 4..11. The upper bound is EXCLUSIVE.
                 var target = _rng.Next(4, 12);
                 var added  = 0;
 
+                // C#: `(host, _rng.Next(...))` builds a two-part tuple.
+                // C#: HashSet.Add returns true only if it actually inserted, so
+                // C#: this counts real additions and ignores duplicate picks.
                 while (added < target)
                     if (_open.Add((host, _rng.Next(_plugins.Length))))
                         added++;
@@ -129,8 +151,14 @@ public sealed class Generator
             // and nobody should be. Without that weighting the aging report
             // flat-lines at one number for every severity, which is both
             // uninformative and obviously wrong to anyone who has seen a real one.
+            // C#: `.Where(...)` is Java's `.stream().filter(...)`.
+            // C#: `o => { ...; return x; }` is a lambda with a body, for when one
+            // C#: expression is not enough. `o` names each item as we visit it.
             var resolved = _open.Where(o =>
             {
+                // C#: a switch EXPRESSION — produces a value. Arms use `=>`,
+                // C#: are separated by commas, and `_` is the default case.
+                // C#: No `case`, no `break`, no accidental fallthrough.
                 var chance = _plugins[o.PluginIdx].Severity switch
                 {
                     4 => 0.34,   // critical — someone is paged
@@ -139,6 +167,7 @@ public sealed class Generator
                     1 => 0.07,   // low
                     _ => 0.04    // informational — nobody is in a hurry
                 };
+                // C#: NextDouble() gives 0.0-1.0. Under the threshold = it happened.
                 return _rng.NextDouble() < chance;
             }).ToList();   // materialise before mutating — you cannot remove from
                            // a collection while a LINQ query over it is still lazy
@@ -186,17 +215,24 @@ public sealed class Generator
     /// without it the same logical scan would serialise differently on different
     /// runs and the output would be needlessly unstable to diff.
     /// </summary>
+    // C#: `=>` on a METHOD means "this method is one expression" — there is no
+    // C#: body in braces and no `return` keyword. Java has no equivalent.
     private List<Finding> Materialise() =>
         _open
+            // C#: `.Select(...)` is Java's `.map(...)` — transform each item.
             .Select(o =>
             {
                 var p = _plugins[o.PluginIdx];
-                // TryGetValue is the no-exception lookup: returns false and leaves
-                // `cve` null when the key is absent, which is the common case.
-                // `out var cve` declares the variable inline at the call site.
+                // C#: TryGetValue is the lookup that does not throw: it returns
+                // C#: false and leaves `cve` null when the key is missing.
+                // C#: `out var cve` DECLARES the variable right there in the call.
+                // C#: Java would need to declare it on a line above.
                 _cves.TryGetValue(p.Id.ToString(), out var cve);
                 return new Finding(o.Host, p.Id, p.Name, p.Severity, cve);
             })
+            // C#: OrderBy/ThenBy = Java's Comparator.comparing().thenComparing().
             .OrderBy(f => f.Host).ThenBy(f => f.PluginId)
+            // C#: `.ToList()` = Java's `.collect(toList())`. Runs the whole chain —
+            // C#: nothing above this line actually executes until now.
             .ToList();
 }

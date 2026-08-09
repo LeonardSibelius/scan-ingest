@@ -39,6 +39,11 @@ public static class Reports
     /// whenever it runs and whatever data is present.
     /// </summary>
     /// <returns>One row per severity present, worst first.</returns>
+    // C#: Read this signature right to left. `=>` means the whole method is one
+    // C#: expression — no braces, no `return`. It awaits the query and hands back
+    // C#: the result. `IEnumerable<T>` is Java's Iterable<T>.
+    // C#: `QueryAsync<SeverityRow>` — the type in angle brackets tells Dapper what
+    // C#: to build from each row. Java: `query(sql, SeverityRow.class)`.
     public static async Task<IEnumerable<SeverityRow>> BySeverityAsync(NpgsqlConnection conn) =>
         await conn.QueryAsync<SeverityRow>("""
             -- Pick the most recent scan run.

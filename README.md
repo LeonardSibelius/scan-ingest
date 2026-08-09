@@ -122,6 +122,22 @@ and diffing row counts, not by assertion.
 
 ---
 
+## Reading the comments
+
+The source carries two layers of commentary, and they answer different questions.
+
+**Ordinary comments explain *why*** — why the landing table exists, why the
+commitment register is keyed differently from the findings table, why a due date is
+never recalculated. Design reasoning.
+
+**Comments prefixed `// C#:` explain *what the syntax means***, written for someone
+who knows Java and is reading C# for the first time. `await`, records, tuples,
+LINQ, switch expressions, `^1`, raw string literals, anonymous objects. Each is one
+line, at the place it first matters.
+
+If you already write C#, the `// C#:` lines are noise — they are prefixed so you
+can skip them at a glance. If you do not, they are the ones to read first.
+
 ## A walk through the code
 
 The source is heavily commented — every method carries a summary and the

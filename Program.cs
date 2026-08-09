@@ -1,13 +1,19 @@
 using Npgsql;
 using ScanIngest;
 
-// C# top-level statements — no class, no Main. The compiler wraps this for you.
-// Modern C# idiom; you will see it in anything written since .NET 6.
+// C#: TOP-LEVEL STATEMENTS. No class here and no Main method — the compiler
+// C#: generates them around this file. Java always needs the full
+// C#: `public class X { public static void main(String[] a) { ... } }`.
+// C#: Because of that wrapper, `await` works directly at file level below,
+// C#: even though there is no `async` keyword in sight.
 
 const string DbName = "scanprep";
 
 // Connection string comes from the environment if set, otherwise a local default.
 // Never hardcode credentials in a real one — this is a scratch database.
+//
+// C#: `??` is the null-coalescing operator: "use the left side, unless it is
+// C#: null, in which case use the right". Java 9+ writes Objects.requireNonNullElse.
 var baseConn = Environment.GetEnvironmentVariable("SCANPREP_CONN")
                ?? "Host=localhost;Port=5432;Username=postgres;Password=postgres";
 
@@ -42,6 +48,11 @@ var runs      = new List<ScanRun>();
 // is what "idempotent" has to mean for a pipeline that gets re-driven.
 var startedAt = new DateTimeOffset(2026, 7, 3, 9, 0, 0, TimeSpan.Zero);
 
+// C#: A LOCAL FUNCTION — a method declared inside another scope, here at file
+// C#: level. Java has no equivalent; you would write a private static method.
+// C#: `static` on it means it captures nothing from the surrounding code.
+// C#: `{at:O}` formats the date in round-trip form (2026-07-03T09:00:00.0000000+00:00),
+// C#: which is unambiguous — it matters, because this string becomes an identifier.
 static Guid DeterministicRunId(string source, DateTimeOffset at)
 {
     var bytes = System.Security.Cryptography.MD5.HashData(
@@ -52,6 +63,9 @@ static Guid DeterministicRunId(string source, DateTimeOffset at)
 for (var week = 0; week < 6; week++)
 {
     var scannedAt = startedAt.AddDays(week * 7);
+    // C#: NAMED ARGUMENTS — `ScanRunId:` labels which parameter each value is for.
+    // C#: Optional, but it makes a three-argument constructor readable at the call
+    // C#: site. Java has no equivalent.
     var run = new ScanRun(
         ScanRunId: DeterministicRunId("acas-nessus", scannedAt),
         ScannedAt: scannedAt,
@@ -79,6 +93,8 @@ Console.WriteLine($"  total fact rows: {await Reports.TotalFactRowsAsync(conn)}"
 // replay will quietly corrupt every number downstream.
 Console.WriteLine("\n[3] idempotency — re-ingesting the last scan");
 
+// C#: `runs[^1]` is the LAST element — `^` counts from the end, so `^1` is final
+// C#: and `^2` the one before. Java: runs.get(runs.size() - 1).
 var before  = await Reports.TotalFactRowsAsync(conn);
 var replay  = await Ingest.IngestAsync(conn, runs[^1], generator.NextScanReplay());
 var after   = await Reports.TotalFactRowsAsync(conn);

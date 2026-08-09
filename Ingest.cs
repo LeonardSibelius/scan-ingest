@@ -37,6 +37,10 @@ public static class Ingest
     /// How many rows actually landed in the fact table. Zero on a replay, which
     /// is the signal the idempotency check in Program.cs looks for.
     /// </returns>
+    // C#: `async` says this method contains `await`. It is required whenever it does.
+    // C#: `Task<int>` is Java's CompletableFuture<Integer> — an int that arrives later.
+    // C#: `IReadOnlyList<T>` is a list the method promises not to modify.
+    // C#: The `Async` name suffix is convention, not syntax.
     public static async Task<int> IngestAsync(
         NpgsqlConnection conn, ScanRun run, IReadOnlyList<Finding> findings)
     {
@@ -49,8 +53,13 @@ public static class Ingest
         // none of it does. A half-ingested scan would make the delta reports
         // report remediation that never happened.
         //
-        // C# note: `await using` is try-with-resources for IAsyncDisposable. The
-        // transaction is rolled back on dispose if it was never committed, so an
+        // C#: `await x` = "do x, then carry on". It frees the thread while waiting
+        // C#: rather than blocking it. Read it as an ordinary sequential call.
+        // C#: `using` = Java's try-with-resources: clean up when scope exits.
+        // C#: `await using` = the cleanup itself is async.
+        // C#: No braces here, so "scope" means the rest of the method.
+        //
+        // The transaction rolls back on dispose if never committed, so an
         // exception anywhere below cleans up without an explicit catch.
         await using var tx = await conn.BeginTransactionAsync();
 
@@ -59,6 +68,10 @@ public static class Ingest
         // ---------------------------------------------------------------------
         // ON CONFLICT DO NOTHING makes a replay harmless: the run already exists,
         // nothing changes, and we carry on to re-derive everything downstream.
+        // C#: `"""..."""` is a raw string literal — Java's text block. Everything
+        // C#: between the triple quotes is taken literally, no escaping needed,
+        // C#: which is why the SQL below reads exactly like SQL.
+        // C#: WITH parentheses, `await using (...)` scopes to the braces that follow.
         await using (var cmd = new NpgsqlCommand("""
             INSERT INTO scan_run (scan_run_id, scanned_at, source)
             VALUES (@id, @at, @src)
@@ -106,6 +119,10 @@ public static class Ingest
                 // contract: stage 2 extracts them by name with ->>, and a
                 // serializer convention change would break that join silently,
                 // producing NULLs rather than an error.
+                // C#: `new Dictionary<K,V> { ["key"] = value, ... }` is a map built
+                // C#: inline. Java 9+ writes Map.of("host", f.Host, ...).
+                // C#: `object?` means "any type, and it may be null" — needed here
+                // C#: because the values are a mix of strings, ints and nulls.
                 var json = JsonSerializer.Serialize(new Dictionary<string, object?>
                 {
                     ["host"]        = f.Host,

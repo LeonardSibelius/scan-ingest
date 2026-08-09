@@ -231,7 +231,11 @@ public static class Poam
             -- a critical two days late outranks an informational late by a year.
             ORDER BY p.severity DESC, DaysOverdue DESC
             LIMIT @limit
-            """, new { limit });   // anonymous object -> Dapper parameters
+            """, new { limit });
+    // C#: `new { limit }` is an ANONYMOUS OBJECT — a throwaway type with one
+    // C#: property called `limit`, created on the spot. Dapper reads the property
+    // C#: names and binds them to the @names in the SQL. Java has no equivalent;
+    // C#: you would pass a Map or use positional parameters.
 
     /// <summary>
     /// Open and overdue load per accountable owner. The accountability view: not
