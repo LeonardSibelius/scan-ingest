@@ -194,11 +194,9 @@ ORDER BY 3 DESC, 1;
 -- The list an Authorizing Official actually asks for: names, machines,
 -- deadlines, days late.
 --
--- The row limit is a literal rather than a parameter, deliberately. Now that
--- this file is the single source for both the program and psql, a parameter
--- placeholder here would make `psql -f queries.sql` fail to parse. The C# never
--- passed anything but 10 anyway, so the flexibility was costing more than it was
--- worth.
+-- The row limit is a literal rather than a parameter, deliberately. This file
+-- has to run under psql as well as through the C#, and psql cannot parse a
+-- parameter placeholder it has no value for.
 -- =============================================================================
 WITH asof AS (SELECT MAX(scanned_at)::date AS d FROM scan_run)
 SELECT p.owner                                   AS Owner,

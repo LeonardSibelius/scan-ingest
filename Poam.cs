@@ -194,18 +194,14 @@ public static class Poam
     /// actually asks for — not a count, but names and dates.
     /// </summary>
     /// <remarks>
-    /// The row limit is a literal in the SQL rather than a parameter. It used to
-    /// be one — but queries.sql is now the single source for both this and psql,
-    /// and a placeholder there breaks `psql -f queries.sql`. Nothing ever passed
-    /// anything but the default, so the flexibility was costing more than it was
-    /// worth. If it needs to vary, the SQL moves back into the code.
+    /// The row limit is written into the SQL as a literal rather than passed as
+    /// a parameter. queries.sql is the single source for both this method and
+    /// `psql -f queries.sql`, and psql cannot parse a parameter placeholder it
+    /// has no value for. If the limit ever needs to vary, this one query's SQL
+    /// moves back into the code.
     /// </remarks>
     public static async Task<IEnumerable<PoamItemRow>> WorstOverdueAsync(NpgsqlConnection conn) =>
         await conn.QueryAsync<PoamItemRow>(SqlLibrary.Get("WorstOverdueAsync"));
-    // C#: `new { limit }` is an ANONYMOUS OBJECT — a throwaway type with one
-    // C#: property called `limit`, created on the spot. Dapper reads the property
-    // C#: names and binds them to the @names in the SQL. Java has no equivalent;
-    // C#: you would pass a Map or use positional parameters.
 
     /// <summary>
     /// Open and overdue load per accountable owner. The accountability view: not
