@@ -126,7 +126,11 @@ function Read-Reports {
     $current  = $null
     $inHeader = $false
 
-    foreach ($line in Get-Content $sqlPath) {
+    # -Encoding UTF8 is not optional. queries.sql is UTF-8 with no byte-order
+    # mark, and Windows PowerShell 5.1's Get-Content falls back to the system
+    # ANSI codepage when it sees no BOM — which turns every em-dash in a report
+    # description into "â€"" on screen.
+    foreach ($line in Get-Content $sqlPath -Encoding UTF8) {
 
         if ($line -match '^-- =+$') {
             if ($inHeader) {
