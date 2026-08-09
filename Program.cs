@@ -1,3 +1,27 @@
+// =============================================================================
+// scan-ingest — a small continuous-monitoring pipeline.
+//
+// It loads what a vulnerability scanner found across six weekly scans, tracks
+// each problem as a commitment with an owner and a deadline, and compares all of
+// it against a human assessor's control assessment to find where the two
+// disagree.
+//
+// Two things it is NOT, because the phrase "continuous monitoring" gets used to
+// mean more than this:
+//
+//   It is batch, not real time. Six weekly scans, loaded in one go.
+//
+//   It does not replace the manual assessment. It compares against it — and
+//   that comparison is the entire point. If the assessment went away there
+//   would be nothing to correlate, and the most valuable row this program can
+//   produce is precisely the one where a human said "compliant" and the scanner
+//   disagrees.
+//
+// This file runs top to bottom, once: set up the database, loop six times
+// loading a scan and reconciling the commitments, prove that reloading changes
+// nothing, then ask the database ten questions and print the answers.
+// =============================================================================
+
 using Npgsql;
 using ScanIngest;
 
