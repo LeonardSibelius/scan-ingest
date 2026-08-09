@@ -3,37 +3,34 @@ using System.Text.RegularExpressions;
 namespace ScanIngest;
 
 // =============================================================================
-// SqlLibrary.cs — one copy of the report SQL, loaded from queries.sql.
+// SqlLibrary.cs — fetches a named query out of queries.sql.
 //
-// WHY THIS EXISTS
+// queries.sql holds the report SQL, and it is the only place that SQL exists.
+// This class reads that file once, splits it into named blocks, and hands one
+// back: Get("BySeverityAsync") returns the SELECT under that heading.
 //
-// The report SQL used to be written twice: once as raw string literals inside
-// the C#, and once as plain text in queries.sql so that a human (and
-// reports.ps1) could run it directly. Two copies with nothing connecting them,
-// guarded by a test that compared them and failed when they diverged.
+// reports.ps1 parses the same file by the same rules, so the C# program and the
+// PowerShell menu run identical SQL by construction. The format itself is
+// documented in the banner at the top of queries.sql.
 //
-// The test worked — it caught three real differences the day it was written. But
-// a test that stops two copies drifting is a smaller idea than not having two
-// copies. queries.sql is now the only place the report SQL lives, and both the
-// program and the PowerShell menu read it.
+// THE TRADEOFF
 //
-// WHAT THIS COSTS
+// Keeping SQL in a data file instead of in string literals is not a free win:
 //
-// It is not a free win, and the tradeoff is worth understanding:
+//   COST   The SQL does not sit beside the record type it fills. Understanding
+//          BySeverityAsync means opening two files rather than one.
 //
-//   LOST   The SQL no longer sits next to the record type it fills. In
-//          Findings.cs you used to see the query and `SeverityRow` within a few
-//          lines of each other.
+//   COST   A misspelled query name is a RUNTIME failure, not a compile error.
+//          The compiler cannot check a string against a file it never reads.
+//          That is why Get() throws a message listing the names that DO exist,
+//          and why SqlSyncTests asserts in both directions: every name the code
+//          asks for is in the file, and every block in the file is asked for.
 //
-//   LOST   A misspelled query name is no longer a compile error. It is a
-//          runtime failure — which is why Get() throws something a human can act
-//          on, and why a test asserts that every name the code asks for exists.
+//   GAIN   One copy. The program and the menu cannot disagree, because there is
+//          no second thing to disagree with.
 //
-//   GAINED One copy. No possibility of drift, in either direction, ever.
-//
-// Most teams keep SQL in the code and accept the duplication. This project went
-// the other way because it is meant to be read, and one copy is easier to read
-// than two plus a test explaining why there are two.
+// Most projects keep SQL in the code and accept the duplication. This one is
+// meant to be read, and one copy is easier to read than two.
 // =============================================================================
 
 public static class SqlLibrary
