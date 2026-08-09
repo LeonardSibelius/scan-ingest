@@ -8,7 +8,11 @@ because the point of the code is the shape of the data it produces. Each step en
 with a pointer into the source, so you can read the comment that explains what you
 just saw.
 
-**Total time:** about 45 minutes, or 20 if you skip Part 5.
+**Total time:** about an hour, or 25 minutes if you stop after Part 3.
+
+If you only want to *see* the reports rather than understand the data underneath
+them, do Part 1 and then skip straight to **Part 6** — it runs each report and
+shows you the SQL that produced it.
 
 ---
 
@@ -76,6 +80,11 @@ just know the shape:
 | `[8]`–`[13]` | **What it means.** Who promised to fix what and by when — and where the security paperwork disagrees with the scanner. |
 
 The interesting one is the third. The first two are how you earn the right to it.
+
+> **Thirteen sections is a lot at once, and there is no way to ask the program for
+> just one.** That is what `reports.ps1` is for, and **Part 6** at the end covers
+> it. Come back to it whenever the firehose gets tiring — it runs any single report
+> and shows you the SQL that produced it.
 
 ---
 
@@ -618,6 +627,128 @@ your numbers match the ones in this tutorial exactly.
 
 ---
 
+## Part 6 — Run the reports one at a time
+
+Everything so far has been you writing SQL by hand. This part is the opposite:
+ten prepared reports, each of which shows you its own SQL before it runs.
+
+### Step 18 — Open the menu
+
+From the repository root, in a **PowerShell** window — not the psql prompt:
+
+```bash
+.\reports.ps1
+```
+
+**You should see:**
+
+```
+==============================================================================
+  scan-ingest reports
+  database: scanprep
+==============================================================================
+   1. TotalFactRowsAsync     The simplest one. Every finding, every scan.
+   2. BySeverityAsync        Open findings by severity, LATEST SCAN ONLY.
+   3. TrendAsync             High+critical per scan, with the change since...
+   4. DeltaAsync             New / resolved / still-open, comparing the two...
+   5. AgingAsync             How long currently-open findings have been open...
+   6. StatusAsync            Open commitments per severity, and how many blew...
+   7. ByOwnerAsync           Load per accountable owner...
+   8. WorstOverdueAsync      The list an Authorizing Official actually asks for...
+   9. CorrelateAsync         THE POINT OF THE WHOLE PROJECT...
+  10. UncoveredAsync         The mirror-image gap...
+
+   A. run every report
+   Q. quit
+```
+
+Type a number and press Enter.
+
+**What you get.** Three things, in order: the description, **the SQL**, then the
+results. That middle part is the point — the query and its output on screen
+together, so you can see which line produced which column.
+
+`Q` quits. `A` runs all ten.
+
+---
+
+### Step 19 — Read one properly
+
+Type **`2`**.
+
+`BySeverityAsync` is the simplest real query in the project, and everything else
+in the file is built on the shape it uses:
+
+```sql
+WITH latest AS (
+    SELECT scan_run_id FROM scan_run ORDER BY scanned_at DESC LIMIT 1
+)
+SELECT f.severity, COUNT(*)
+FROM finding f
+JOIN latest l ON l.scan_run_id = f.scan_run_id
+GROUP BY f.severity
+```
+
+The `latest` block picks **one** scan run. The `JOIN` to it then throws away every
+finding that belongs to a different scan — **a join to a one-row table is a filter
+wearing a join's clothes.**
+
+Prove it matters. Back at the psql prompt, run it without the filter:
+
+```sql
+SELECT severity, COUNT(*) FROM finding GROUP BY severity ORDER BY severity DESC;
+```
+
+You get **99 criticals** instead of 13. That 99 is not a fact about anything — it
+is the same handful of problems counted once per scan. In a table that keeps
+history, an unfiltered total is meaningless, and every query in this project opens
+with a `latest` block because of it.
+
+---
+
+### Step 20 — Then read the one that matters
+
+Type **`9`**.
+
+`CorrelateAsync` is what the whole project exists to produce, and this is the
+clearest look at how the verdict is actually derived — the `CASE` expression is
+right there above its own output.
+
+Trace one row. Find `CM-6` in the results, then find these lines in the SQL:
+
+```sql
+WHEN cv.control_id IS NULL                               THEN 'not assessable'
+WHEN cs.compliance = 'Compliant'     AND ce.findings > 0 THEN 'CONTRADICTED'
+```
+
+`CM-6` has evidence sources, so the first test fails. It is marked `Compliant` and
+has 30 live findings, so the second one hits. **That is the entire mechanism by
+which this system catches a lie**, and it is four lines of `CASE`.
+
+---
+
+### Step 21 — Two shortcuts worth knowing
+
+See what is available without entering the menu:
+
+```bash
+.\reports.ps1 -List
+```
+
+Run one report and exit — handy once you know the numbers:
+
+```bash
+.\reports.ps1 -Report 9
+```
+
+> **Where the SQL actually lives.** The menu has no copy of it. It parses
+> **`queries.sql`** when it starts, which is the same SQL the C# runs, labelled
+> with the method each one came from. Edit that file and the menu changes. If you
+> would rather work in psql directly, `psql -U postgres -d scanprep -f queries.sql`
+> runs all ten.
+
+---
+
 ## Where to go next
 
 - **`README.md`** has the design reasoning: why the landing table exists, why the
@@ -651,7 +782,18 @@ run with different code. Do Step 17.
 
 **`psql` is not found on Windows** — it is not added to `PATH` by the installer.
 Use the full path shown in Step 4, or add `C:\Program Files\PostgreSQL\17\bin` to
-your `PATH`.
+your `PATH`. `reports.ps1` finds it on its own and does not need this.
+
+**`reports.ps1 cannot be loaded because running scripts is disabled`** — Windows
+blocks unsigned scripts by default. Allow them for your own account:
+
+```bash
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+```
+
+**The report menu prints but does not respond** — it needs a real terminal. If you
+piped anything into it, or are running it from an editor's output pane, use
+`.\reports.ps1 -List` and `.\reports.ps1 -Report N` instead.
 
 **The psql prompt shows `-#` and nothing I type works** — psql is waiting for you
 to finish a statement. Usually you pasted something that is not SQL, or left off a
