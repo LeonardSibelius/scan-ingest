@@ -57,8 +57,8 @@ public record Finding(
 /// </summary>
 /// <param name="ScanRunId">
 /// Derived deterministically from source + timestamp rather than randomly — see
-/// the comment in Program.cs. Random ids here were the cause of a replay bug
-/// that silently doubled every row.
+/// the comment in Program.cs. A random id here would make every replay look like
+/// a brand-new scan, and every row would insert a second time.
 /// </param>
 /// <param name="Source">
 /// Which system produced this data. Currently only "acas-nessus", but the field

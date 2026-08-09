@@ -207,9 +207,9 @@ function Invoke-Report {
 
 # --- Print the menu ----------------------------------------------------------
 # Everything here goes through Write-Host deliberately. Mixing Write-Host with
-# bare pipeline output sends the two down different streams, and they then do not
-# reliably interleave — the first version of this script printed its headings and
-# silently dropped the list.
+# bare pipeline output sends the two down different streams, which do not then
+# reliably interleave: the headings appear and the list they introduce silently
+# does not.
 function Show-Menu {
     Write-Host ''
     Write-Host ('=' * 78) -ForegroundColor DarkGray

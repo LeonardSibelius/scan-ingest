@@ -66,7 +66,7 @@ var runs      = new List<ScanRun>();
 // Anchor the scan dates to a FIXED point, not UtcNow. With UtcNow, two runs of
 // this program minutes apart produce timestamps that differ by minutes — and
 // since scanned_at is part of the fact table's primary key, nothing collides and
-// every row inserts a second time. Re-running silently doubled the data.
+// every row inserts a second time. Re-running would silently double the data.
 //
 // Deterministic timestamps plus deterministic run ids make replay a no-op, which
 // is what "idempotent" has to mean for a pipeline that gets re-driven.

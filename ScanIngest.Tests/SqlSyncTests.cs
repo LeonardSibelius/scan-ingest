@@ -5,24 +5,27 @@ namespace ScanIngest.Tests;
 // =============================================================================
 // SqlSyncTests.cs — guard the seam between the code and queries.sql.
 //
-// WHAT THIS USED TO BE, AND WHY IT CHANGED
+// The report SQL lives in queries.sql, not in the C#. That buys one copy of it
+// instead of two, and it costs a compile-time guarantee: the compiler cannot
+// check a string like Get("BySeverityAsync") against a file it never reads. A
+// typo there is not a build error. It is a crash at whatever hour the program
+// next runs.
 //
-// The report SQL was once written twice — as raw string literals in the C#, and
-// again as plain text in queries.sql for psql and reports.ps1. This file
-// compared the two copies and failed when they drifted. It worked: it caught
-// three real differences the day it was written.
+// These tests buy that guarantee back, at build time. Four checks:
 //
-// But a test that keeps two copies in step is a smaller idea than not having two
-// copies. queries.sql is now the only place the report SQL lives, and both the
-// program and the menu read it. There is nothing left to compare.
+//   The file is found and parses into exactly ten queries. Without this, every
+//   other test here would pass vacuously by finding nothing to check.
 //
-// WHAT REPLACES IT
+//   Every name the code asks for is defined in the file, and resolves to
+//   something that looks like SQL. One test per name, so a failure says WHICH.
 //
-// Moving the SQL out of the code traded a compile-time guarantee for a runtime
-// one: a misspelled query name used to be a build error and is now a crash at
-// whatever hour the program next runs. These tests buy that guarantee back —
-// every name the code asks for is checked, at build time, against what the file
-// actually defines.
+//   Every name defined in the file is asked for by the code. A block nobody
+//   calls is either dead SQL or a rename finished on one side only, and both
+//   look exactly like a working file until something counts them.
+//
+//   Asking for a name that does not exist produces a message listing the names
+//   that do. That is the runtime failure this file exists to soften, so when it
+//   does happen the reader is not left grepping.
 // =============================================================================
 
 public class SqlSyncTests
