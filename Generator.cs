@@ -1,17 +1,34 @@
 namespace ScanIngest;
 
 // =============================================================================
-// Generator.cs — synthetic scan data.
+// Generator.cs — stands in for the scanner.
 //
-// This file exists because the interesting queries in this project are all about
-// CHANGE, and change needs history. A single snapshot of "here are 300 problems"
-// supports no useful question. Six weeks of scans where findings persist, get
-// fixed, and come back supports every question in Findings.cs and Poam.cs.
+// In a real deployment Tenable Nessus finds the problems. Here this class
+// invents them, so the project runs on any machine with nothing to install and
+// no scanner to license.
 //
-// The generator is therefore not a stub. Getting the churn model wrong makes the
-// reports lie, and it did on the first attempt: with a flat remediation rate the
-// aging report showed every severity averaging the same number of days, which is
-// not what any real remediation programme looks like.
+// WHAT IT PRODUCES
+//
+// One scan per call: a list of Finding records, each saying "machine X has
+// problem Y, and it is this severe". Forty machines, drawn from the twenty
+// checks in PluginCatalog. Program.cs calls it six times, for six weekly scans.
+//
+// WHAT MAKES IT MORE THAN RANDOM NUMBERS
+//
+// It remembers. The _open field holds the problems currently open and carries
+// them from one scan into the next. Each new scan starts from the previous one,
+// removes some findings (remediated) and adds some (newly discovered).
+//
+// That memory is what every report in this project runs on. A finding present in
+// both weeks is "still open". One that disappears was "resolved". One that shows
+// up is "new". Six independent random snapshots would support none of those
+// words, and the whole point of continuous monitoring is the words.
+//
+// Remediation is weighted by severity — a critical is far likelier to be fixed
+// between scans than an informational one — so serious problems clear quickly
+// and the rest sit and age, which is what the aging report is measuring.
+//
+// The seed is fixed, so every run produces exactly the same numbers.
 // =============================================================================
 
 /// <summary>
