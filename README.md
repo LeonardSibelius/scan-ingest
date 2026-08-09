@@ -122,6 +122,26 @@ and diffing row counts, not by assertion.
 
 ---
 
+## Running the reports by hand
+
+`dotnet run` prints all thirteen sections and there is no way to ask it for just
+one. To poke at a single report, **`queries.sql`** holds every one of them as plain
+SQL, each labelled with the C# method it came from.
+
+Run the lot:
+
+```bash
+psql -U postgres -d scanprep -f queries.sql
+```
+
+Or open a session and paste them one at a time:
+
+```bash
+psql -U postgres -d scanprep
+```
+
+Everything in that file is read-only.
+
 ## Reading the comments
 
 The source carries two layers of commentary, and they answer different questions.
