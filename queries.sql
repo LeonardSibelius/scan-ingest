@@ -1,8 +1,34 @@
 -- =============================================================================
--- queries.sql — every report in this project, as plain SQL you can run by hand.
+-- queries.sql — every report in this project.
 --
--- These are the same queries the C# runs, copied out so they can be read and
--- experimented with directly. Each one names the method it came from.
+-- This is not a copy of the SQL the program runs. It IS that SQL. Two separate
+-- programs read this one file:
+--
+--     reports.ps1     the PowerShell menu — re-reads it before every menu turn
+--     SqlLibrary.cs   which the C# calls to fetch a query by name
+--
+-- Edit a query here and both of them change.
+--
+--
+-- THE COMMENT BLOCKS BELOW ARE NOT DECORATION
+--
+-- Postgres throws them away. The two parsers live on them. Every report must
+-- look exactly like this:
+--
+--     -- ============================
+--     -- SomeFile.cs -> MethodName        <- the name, and the menu heading
+--     -- one or more lines of prose       <- the menu description
+--     -- ============================
+--     SELECT ... ;                        <- everything up to the next block
+--
+-- The rules of equals signs are the brackets. The arrow line is what makes a
+-- block a report rather than just a header — this banner has no arrow line,
+-- which is the only reason it is not report number one.
+--
+-- The spaces around the arrow are load-bearing. Lose one and that report
+-- silently disappears from the menu: no error, no warning, just a shorter list.
+-- ScanIngest.Tests exists to catch precisely that.
+--
 --
 -- Run them all at once:
 --     psql -U postgres -d scanprep -f queries.sql
