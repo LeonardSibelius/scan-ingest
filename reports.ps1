@@ -7,16 +7,51 @@
     are trying to understand one query. This reads queries.sql, lists what is in
     it, and runs whichever you pick — showing the SQL first, then its results.
 
-    There is no second copy of the SQL here. The menu is built by parsing
-    queries.sql at startup, so editing that file changes this menu.
+    THE TEN REPORTS, AND WHERE THEY COME FROM
+
+    The reports are not all in one place. They are split across three C# files by
+    SUBJECT, and the menu falls into three blocks because queries.sql is ordered
+    the same way:
+
+         1.  TotalFactRowsAsync     Findings.cs   \
+         2.  BySeverityAsync        Findings.cs    |  what the scanner SAW
+         3.  TrendAsync             Findings.cs    |  how many, what changed,
+         4.  DeltaAsync             Findings.cs    |  how long it has been broken
+         5.  AgingAsync             Findings.cs   /
+
+         6.  StatusAsync            Poam.cs       \  what people PROMISED
+         7.  ByOwnerAsync           Poam.cs        |  who owns what,
+         8.  WorstOverdueAsync      Poam.cs       /   who is late
+
+         9.  CorrelateAsync         Controls.cs   \  where the scanner and the
+        10.  UncoveredAsync         Controls.cs   /  paperwork DISAGREE
+
+    Observations, commitments, contradictions. That is the whole program, and the
+    menu numbers happen to be a map of it.
+
+    Each report prints "from <file>" above its results, so you never have to
+    remember which is which.
+
+    WHERE THE SQL LIVES
+
+    Not here, and not in the C# either. queries.sql is the single source: this
+    script parses it at startup, and the program reads it through SqlLibrary.
+    Editing that file changes both.
+
+    The numbering follows the order of queries.sql. Reorder that file and these
+    numbers move with it — the groupings above will still hold, the digits may not.
 
 .EXAMPLE
     .\reports.ps1
     Opens the menu.
 
 .EXAMPLE
-    .\reports.ps1 -Report 3
-    Runs report 3 and exits. Useful once you know the numbers.
+    .\reports.ps1 -Report 9
+    Runs the correlation — the one the whole project exists for — and exits.
+
+.EXAMPLE
+    .\reports.ps1 -List
+    Prints the menu without entering it. Useful from a non-interactive shell.
 
 .NOTES
     Assumes the scanprep database exists. If it does not, run `dotnet run` first.
