@@ -186,52 +186,22 @@ public static class Poam
     /// overdue days that no evidence supports.
     /// </summary>
     public static async Task<IEnumerable<PoamStatusRow>> StatusAsync(NpgsqlConnection conn) =>
-        await conn.QueryAsync<PoamStatusRow>($"""
-            WITH asof AS (SELECT MAX(scanned_at)::date AS d FROM scan_run)
-            SELECT p.severity AS Severity,
-                   COUNT(*)   AS Open,
-                   COUNT(*) FILTER (WHERE p.due_on < (SELECT d FROM asof)) AS Overdue,
-                   -- MAX() only because SlaCase is a per-row expression and this
-                   -- is a grouped query; every row in a severity group yields the
-                   -- same value, so any aggregate would do.
-                   MAX({SlaCase.Replace("severity", "p.severity")}) AS SlaDays
-            FROM poam p
-            WHERE p.closed_on IS NULL
-            GROUP BY p.severity
-            ORDER BY p.severity DESC
-            """);
+        await conn.QueryAsync<PoamStatusRow>(SqlLibrary.Get("StatusAsync"));
 
     /// <summary>
     /// The worst overdue items, with enough context to act: owner, machine,
     /// problem, deadline, and how late. This is the list an Authorizing Official
     /// actually asks for — not a count, but names and dates.
     /// </summary>
-    /// <param name="limit">
-    /// C# note: an optional parameter with a default. Callers can omit it, unlike
-    /// Java where this needs an overload.
-    /// </param>
-    public static async Task<IEnumerable<PoamItemRow>> WorstOverdueAsync(
-        NpgsqlConnection conn, int limit = 10) =>
-        await conn.QueryAsync<PoamItemRow>("""
-            WITH asof AS (SELECT MAX(scanned_at)::date AS d FROM scan_run)
-            SELECT p.owner                                   AS Owner,
-                   p.host                                    AS Host,
-                   p.plugin_id                               AS PluginId,
-                   p.plugin_name                             AS PluginName,
-                   p.severity                                AS Severity,
-                   -- Formatted in SQL: this value is only ever printed, and
-                   -- Npgsql's mapping for `date` has shifted between versions.
-                   to_char(p.due_on, 'YYYY-MM-DD')           AS DueOn,
-                   -- date - date yields an integer number of days in Postgres.
-                   ((SELECT d FROM asof) - p.due_on)::int    AS DaysOverdue
-            FROM poam p
-            WHERE p.closed_on IS NULL
-              AND p.due_on < (SELECT d FROM asof)
-            -- Worst severity first, then longest overdue. Severity leads because
-            -- a critical two days late outranks an informational late by a year.
-            ORDER BY p.severity DESC, DaysOverdue DESC
-            LIMIT @limit
-            """, new { limit });
+    /// <remarks>
+    /// The row limit is a literal in the SQL rather than a parameter. It used to
+    /// be one — but queries.sql is now the single source for both this and psql,
+    /// and a placeholder there breaks `psql -f queries.sql`. Nothing ever passed
+    /// anything but the default, so the flexibility was costing more than it was
+    /// worth. If it needs to vary, the SQL moves back into the code.
+    /// </remarks>
+    public static async Task<IEnumerable<PoamItemRow>> WorstOverdueAsync(NpgsqlConnection conn) =>
+        await conn.QueryAsync<PoamItemRow>(SqlLibrary.Get("WorstOverdueAsync"));
     // C#: `new { limit }` is an ANONYMOUS OBJECT — a throwaway type with one
     // C#: property called `limit`, created on the spot. Dapper reads the property
     // C#: names and binds them to the @names in the SQL. Java has no equivalent;
@@ -244,14 +214,5 @@ public static class Poam
     /// conversation.
     /// </summary>
     public static async Task<IEnumerable<OwnerLoadRow>> ByOwnerAsync(NpgsqlConnection conn) =>
-        await conn.QueryAsync<OwnerLoadRow>("""
-            WITH asof AS (SELECT MAX(scanned_at)::date AS d FROM scan_run)
-            SELECT p.owner   AS Owner,
-                   COUNT(*)  AS Open,
-                   COUNT(*) FILTER (WHERE p.due_on < (SELECT d FROM asof)) AS Overdue
-            FROM poam p
-            WHERE p.closed_on IS NULL
-            GROUP BY p.owner
-            ORDER BY 3 DESC, 1   -- ordinals: 3rd column (overdue), then owner name
-            """);
+        await conn.QueryAsync<OwnerLoadRow>(SqlLibrary.Get("ByOwnerAsync"));
 }

@@ -152,25 +152,34 @@ it is read-only:
 psql -U postgres -d scanprep -f queries.sql
 ```
 
-### Two copies of the SQL, and the test that keeps them honest
+### There is only one copy of the report SQL
 
-`queries.sql` is a **copy**. The SQL that actually runs lives inside the C#. Nothing
-links them, so editing a query in `Reports.cs` would silently leave `queries.sql`
-wrong — and it would keep working, showing you SQL the program no longer runs.
+`queries.sql` is not a copy of anything. **It is where the report SQL lives**, and
+both the program and the menu read it — the C# through `SqlLibrary.Get("...")`,
+the PowerShell by parsing the file directly.
+
+It was two copies for about a day, guarded by a test that compared them. That test
+worked; it caught three real differences the day it was written. But keeping two
+copies in step is a smaller idea than having one, so the duplication went instead.
+
+**The tradeoff is real and worth understanding.** Moving SQL out of the code costs
+you two things:
+
+- The query no longer sits beside the record type it fills
+- A misspelled query name is no longer a compile error — it is a runtime crash
 
 ```bash
 dotnet test ScanIngest.Tests
 ```
 
-That test extracts every SQL literal from the sources, extracts every report from
-`queries.sql`, and fails if any report no longer matches. It normalises whitespace,
-comments, case and underscores — the last two because that is exactly the rule
-Dapper matches column names by, so the test is silent about differences that
-cannot matter and loud about every one that can.
+Thirteen tests buy the second one back: every name the code looks up is checked at
+build time against what the file actually defines, in both directions. A query the
+code wants but the file lacks fails. A query the file defines but nobody calls
+fails too.
 
-One query is exempt and says so: `StatusAsync` assembles its SQL by string
-interpolation, so the two sides cannot be compared as text. The exemption list is
-itself asserted to contain exactly that one entry, so it cannot grow quietly.
+Most teams keep SQL in the code and accept the duplication. This project went the
+other way because it is meant to be **read**, and one copy reads better than two
+plus an explanation of why there are two.
 
 ## Reading the comments
 

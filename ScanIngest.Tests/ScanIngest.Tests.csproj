@@ -13,9 +13,16 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.*" />
   </ItemGroup>
 
-  <!-- No ProjectReference. These tests read the SOURCE FILES as text rather than
-       calling into the program, because the thing under test is whether two
-       copies of some SQL still agree — which is a property of the text, not of
-       any running code. -->
+  <ItemGroup>
+    <!-- These tests call SqlLibrary directly, so they need the program. -->
+    <ProjectReference Include="..\ScanIngest.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- SqlLibrary reads queries.sql from beside the running binary, so the test
+         run needs its own copy. Linked rather than duplicated: one file on disk,
+         copied to both output folders at build time. -->
+    <None Include="..\queries.sql" Link="queries.sql" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 
 </Project>

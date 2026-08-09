@@ -177,70 +177,7 @@ public static class Controls
     ///                    The only row you can actually ignore.
     /// </summary>
     public static async Task<IEnumerable<CorrelationRow>> CorrelateAsync(NpgsqlConnection conn) =>
-        await conn.QueryAsync<CorrelationRow>("""
-            WITH latest_scan AS (
-                SELECT scan_run_id FROM scan_run ORDER BY scanned_at DESC LIMIT 1
-            ),
-            -- Pick ONE export and join on its id. Selecting by date alone would
-            -- return every row of every export sharing that date, which is exactly
-            -- the case the primary key now permits. export_id breaks the tie
-            -- deterministically so the same assessment is chosen every run.
-            latest_export AS (
-                SELECT export_id
-                FROM control_status
-                ORDER BY exported_at DESC, export_id
-                LIMIT 1
-            ),
-            -- How many plugins CAN speak to each control. Zero means the scanner
-            -- has no opinion and never will — the distinction the verdict turns on.
-            coverage AS (
-                SELECT control_id, COUNT(*) AS sources
-                FROM plugin_control GROUP BY control_id
-            ),
-            control_evidence AS (
-                SELECT pc.control_id,
-                       COUNT(*)                  AS findings,
-                       MAX(f.severity)           AS worst_severity,
-                       COUNT(DISTINCT f.host)    AS hosts_affected
-                FROM finding f
-                JOIN latest_scan ls    ON ls.scan_run_id = f.scan_run_id
-                JOIN plugin_control pc ON pc.plugin_id = f.plugin_id
-                GROUP BY pc.control_id
-            )
-            SELECT cs.control_id                       AS ControlId,
-                   c.title                             AS Title,
-                   cs.compliance                       AS Compliance,
-                   COALESCE(ce.findings, 0)            AS Findings,
-                   ce.worst_severity                   AS WorstSeverity,
-                   COALESCE(ce.hosts_affected, 0)      AS HostsAffected,
-                   COALESCE(cv.sources, 0)             AS EvidenceSources,
-                   CASE
-                       WHEN COALESCE(cv.sources, 0) = 0
-                            THEN 'not assessable'
-                       WHEN cs.compliance = 'Compliant'     AND ce.findings > 0
-                            THEN 'CONTRADICTED'
-                       WHEN cs.compliance = 'Non-Compliant' AND ce.findings > 0
-                            THEN 'corroborated'
-                       WHEN cs.compliance = 'Non-Compliant'
-                            THEN 'unevidenced'
-                       ELSE 'verified clean'
-                   END                                 AS Verdict
-            FROM control_status cs
-            JOIN latest_export le ON le.export_id = cs.export_id
-            JOIN control c        ON c.control_id = cs.control_id
-            LEFT JOIN coverage cv         ON cv.control_id = cs.control_id
-            LEFT JOIN control_evidence ce ON ce.control_id = cs.control_id
-            ORDER BY
-                CASE
-                    WHEN cs.compliance = 'Compliant' AND ce.findings > 0 THEN 0
-                    WHEN COALESCE(cv.sources, 0) = 0 THEN 1
-                    WHEN cs.compliance = 'Non-Compliant' AND ce.findings > 0 THEN 2
-                    WHEN cs.compliance = 'Non-Compliant' THEN 3
-                    ELSE 4
-                END,
-                COALESCE(ce.worst_severity, 0) DESC,
-                COALESCE(ce.findings, 0) DESC
-            """);
+        await conn.QueryAsync<CorrelationRow>(SqlLibrary.Get("CorrelateAsync"));
 
     /// <summary>
     /// Findings that map to no tracked control at all. This is an RMF coverage
@@ -248,20 +185,5 @@ public static class Controls
     /// place to put. Either the mapping is incomplete or the package is.
     /// </summary>
     public static async Task<IEnumerable<UncoveredRow>> UncoveredAsync(NpgsqlConnection conn) =>
-        await conn.QueryAsync<UncoveredRow>("""
-            WITH latest_scan AS (
-                SELECT scan_run_id FROM scan_run ORDER BY scanned_at DESC LIMIT 1
-            )
-            SELECT f.plugin_id   AS PluginId,
-                   f.plugin_name AS PluginName,
-                   MAX(f.severity) AS Severity,
-                   COUNT(*)      AS Findings
-            FROM finding f
-            JOIN latest_scan ls ON ls.scan_run_id = f.scan_run_id
-            WHERE NOT EXISTS (
-                SELECT 1 FROM plugin_control pc WHERE pc.plugin_id = f.plugin_id
-            )
-            GROUP BY f.plugin_id, f.plugin_name
-            ORDER BY MAX(f.severity) DESC, COUNT(*) DESC
-            """);
+        await conn.QueryAsync<UncoveredRow>(SqlLibrary.Get("UncoveredAsync"));
 }

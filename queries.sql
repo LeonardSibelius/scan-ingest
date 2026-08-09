@@ -37,7 +37,7 @@ WITH latest AS (
     ORDER BY scanned_at DESC
     LIMIT 1
 )
-SELECT f.severity AS severity, COUNT(*) AS n
+SELECT f.severity AS Severity, COUNT(*) AS N
 FROM finding f
 JOIN latest l ON l.scan_run_id = f.scan_run_id
 GROUP BY f.severity
@@ -51,13 +51,13 @@ ORDER BY f.severity DESC;
 -- Deliberately does NOT filter to one scan — the question is how the number
 -- moved across all six. LAG() reaches back to the previous grouped row.
 -- =============================================================================
-SELECT scanned_at AS scanned_at,
-       COUNT(*) FILTER (WHERE severity >= 3) AS high_crit,
+SELECT scanned_at AS ScannedAt,
+       COUNT(*) FILTER (WHERE severity >= 3) AS HighCrit,
        LAG(COUNT(*) FILTER (WHERE severity >= 3))
-           OVER (ORDER BY scanned_at) AS prev,
+           OVER (ORDER BY scanned_at) AS Prev,
        COUNT(*) FILTER (WHERE severity >= 3)
          - LAG(COUNT(*) FILTER (WHERE severity >= 3))
-           OVER (ORDER BY scanned_at) AS delta
+           OVER (ORDER BY scanned_at) AS Delta
 FROM finding
 GROUP BY scanned_at
 ORDER BY scanned_at;
@@ -115,11 +115,11 @@ first_seen AS (
     FROM finding
     GROUP BY host, plugin_id
 )
-SELECT f.severity AS severity,
-       COUNT(*)   AS n,
+SELECT f.severity AS Severity,
+       COUNT(*)   AS N,
        ROUND(AVG(
            EXTRACT(EPOCH FROM (l.scanned_at - fs.first_seen)) / 86400
-       )::numeric, 1) AS avg_days_open
+       )::numeric, 1) AS AvgDaysOpen
 FROM finding f
 JOIN latest l      ON l.scan_run_id = f.scan_run_id
 JOIN first_seen fs ON fs.host = f.host AND fs.plugin_id = f.plugin_id
@@ -136,12 +136,12 @@ ORDER BY f.severity DESC;
 -- ageing against wall-clock time would invent overdue days nothing supports.
 -- =============================================================================
 WITH asof AS (SELECT MAX(scanned_at)::date AS d FROM scan_run)
-SELECT p.severity AS severity,
-       COUNT(*)   AS open,
-       COUNT(*) FILTER (WHERE p.due_on < (SELECT d FROM asof)) AS overdue,
+SELECT p.severity AS Severity,
+       COUNT(*)   AS Open,
+       COUNT(*) FILTER (WHERE p.due_on < (SELECT d FROM asof)) AS Overdue,
        MAX(CASE p.severity
                WHEN 4 THEN 15 WHEN 3 THEN 30 WHEN 2 THEN 90
-               WHEN 1 THEN 180 ELSE 365 END) AS sla_days
+               WHEN 1 THEN 180 ELSE 365 END) AS SlaDays
 FROM poam p
 WHERE p.closed_on IS NULL
 GROUP BY p.severity
@@ -154,9 +154,9 @@ ORDER BY p.severity DESC;
 -- carrying it, and who is drowning".
 -- =============================================================================
 WITH asof AS (SELECT MAX(scanned_at)::date AS d FROM scan_run)
-SELECT p.owner   AS owner,
-       COUNT(*)  AS open,
-       COUNT(*) FILTER (WHERE p.due_on < (SELECT d FROM asof)) AS overdue
+SELECT p.owner   AS Owner,
+       COUNT(*)  AS Open,
+       COUNT(*) FILTER (WHERE p.due_on < (SELECT d FROM asof)) AS Overdue
 FROM poam p
 WHERE p.closed_on IS NULL
 GROUP BY p.owner
@@ -168,21 +168,24 @@ ORDER BY 3 DESC, 1;
 -- The list an Authorizing Official actually asks for: names, machines,
 -- deadlines, days late.
 --
--- NOTE: the C# passes the row limit as a parameter (@limit). Hardcoded to 10
--- here, because psql has no way to supply it.
+-- The row limit is a literal rather than a parameter, deliberately. Now that
+-- this file is the single source for both the program and psql, a parameter
+-- placeholder here would make `psql -f queries.sql` fail to parse. The C# never
+-- passed anything but 10 anyway, so the flexibility was costing more than it was
+-- worth.
 -- =============================================================================
 WITH asof AS (SELECT MAX(scanned_at)::date AS d FROM scan_run)
-SELECT p.owner                                   AS owner,
-       p.host                                    AS host,
-       p.plugin_id                               AS plugin_id,
-       p.plugin_name                             AS plugin_name,
-       p.severity                                AS severity,
-       to_char(p.due_on, 'YYYY-MM-DD')           AS due_on,
-       ((SELECT d FROM asof) - p.due_on)::int    AS days_overdue
+SELECT p.owner                                   AS Owner,
+       p.host                                    AS Host,
+       p.plugin_id                               AS PluginId,
+       p.plugin_name                             AS PluginName,
+       p.severity                                AS Severity,
+       to_char(p.due_on, 'YYYY-MM-DD')           AS DueOn,
+       ((SELECT d FROM asof) - p.due_on)::int    AS DaysOverdue
 FROM poam p
 WHERE p.closed_on IS NULL
   AND p.due_on < (SELECT d FROM asof)
-ORDER BY p.severity DESC, days_overdue DESC
+ORDER BY p.severity DESC, DaysOverdue DESC
 LIMIT 10;
 
 
@@ -262,10 +265,10 @@ ORDER BY
 WITH latest_scan AS (
     SELECT scan_run_id FROM scan_run ORDER BY scanned_at DESC LIMIT 1
 )
-SELECT f.plugin_id     AS plugin_id,
-       f.plugin_name   AS plugin_name,
-       MAX(f.severity) AS severity,
-       COUNT(*)        AS findings
+SELECT f.plugin_id     AS PluginId,
+       f.plugin_name   AS PluginName,
+       MAX(f.severity) AS Severity,
+       COUNT(*)        AS Findings
 FROM finding f
 JOIN latest_scan ls ON ls.scan_run_id = f.scan_run_id
 WHERE NOT EXISTS (
