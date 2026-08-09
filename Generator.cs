@@ -55,13 +55,13 @@ public sealed class Generator
     private readonly string[] _hosts =
         Enumerable.Range(1, 40).Select(i => $"host-{i:D3}.mil").ToArray();
 
-    // The catalogue of checks this scanner knows. It now lives in PluginCatalog
-    // rather than here, because the generator is no longer its only consumer —
-    // the database holds it as reference data, and plugin_control has a foreign
-    // key pointing at it.
+    // The catalogue of checks this scanner knows. PluginCatalog owns it, because
+    // three things need it: this class, the plugin table in the database, and
+    // plugin_control's foreign key into that table.
     //
-    // That split matches reality: a scanner's plugin catalogue is a vendor feed
-    // that arrives on its own schedule, quite separately from any scan results.
+    // Keeping it there rather than here also matches reality. A scanner's plugin
+    // catalogue is a vendor feed that arrives on its own schedule, quite
+    // separately from any scan results.
     //
     // C#: `(int Id, string Name, short Severity)` is a TUPLE type — an ad-hoc
     // C#: group of values with names, no class needed. Java has no equivalent;
@@ -143,12 +143,14 @@ public sealed class Generator
         {
             // ---- Remediation, weighted by severity ----
             //
-            // A flat rate here was the first version's mistake. Real remediation
-            // is triaged: a critical gets someone paged this week, an
-            // informational finding sits for a year because nobody is in a hurry
-            // and nobody should be. Without that weighting the aging report
-            // flat-lines at one number for every severity, which is both
-            // uninformative and obviously wrong to anyone who has seen a real one.
+            // Every open finding gets a chance of being fixed this week, and the
+            // chance depends on how bad it is. Real remediation is triaged: a
+            // critical gets someone paged, an informational finding sits for a
+            // year because nobody is in a hurry and nobody should be.
+            //
+            // That weighting is what gives the aging report something to say.
+            // Flatten these rates to one number and every severity comes back
+            // averaging the same number of days open.
             // C#: `.Where(...)` is Java's `.stream().filter(...)`.
             // C#: `o => { ...; return x; }` is a lambda with a body, for when one
             // C#: expression is not enough. `o` names each item as we visit it.
@@ -177,11 +179,12 @@ public sealed class Generator
             // New machines get onboarded, and the scanner vendor ships new checks
             // that suddenly report on machines nobody touched.
             //
-            // The loop counts what was genuinely ADDED, not how many attempts were
+            // `added` counts what genuinely went IN, not how many attempts were
             // made. A random (host, plugin) pair that is already open is not a new
-            // finding — it is a collision, and HashSet.Add returns false for it.
-            // The first version counted attempts, so the real intake was far lower
-            // than intended and the whole estate shrank to nothing over six weeks.
+            // finding — it is a collision, and HashSet.Add returns false without
+            // adding anything. Count attempts instead and collisions eat the
+            // intake: fewer findings arrive than leave, and the estate drains away
+            // week by week.
             var target = _rng.Next(30, 49);
             int added = 0, guard = 0;
             while (added < target && guard++ < 2000)   // guard: the set can saturate
