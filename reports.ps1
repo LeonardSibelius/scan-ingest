@@ -62,7 +62,7 @@ if (-not $env:PGPASSWORD) { $env:PGPASSWORD = 'postgres' }
 # Each report in that file looks like:
 #
 #     -- ===============================
-#     -- Reports.cs -> BySeverityAsync
+#     -- Findings.cs -> BySeverityAsync
 #     -- a description, one or more lines
 #     -- ===============================
 #     SELECT ... ;

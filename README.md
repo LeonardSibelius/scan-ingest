@@ -274,7 +274,7 @@ The two-stage load, and the file most worth reading.
   statement, not both. The landing table is the structural consequence of that one
   limitation — not staging-because-that's-what-people-do.
 
-### `Reports.cs` — the read side
+### `Findings.cs` — questions about what the scanner saw
 
 Dapper over hand-written SQL. The SQL *is* the logic; hiding it behind an ORM
 would mean writing the same query worse and then obscuring it.

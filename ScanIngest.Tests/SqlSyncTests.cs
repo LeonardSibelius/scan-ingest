@@ -35,7 +35,7 @@ public class SqlSyncTests
     /// </summary>
     private static readonly string[] NamesTheCodeAsksFor =
     [
-        // Reports.cs
+        // Findings.cs
         "BySeverityAsync", "DeltaAsync", "AgingAsync", "TrendAsync", "TotalFactRowsAsync",
         // Poam.cs
         "StatusAsync", "ByOwnerAsync", "WorstOverdueAsync",

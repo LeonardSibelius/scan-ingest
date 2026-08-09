@@ -4,7 +4,19 @@ using Npgsql;
 namespace ScanIngest;
 
 // =============================================================================
-// Reports.cs — the read side.
+// Findings.cs — questions about what the scanner saw.
+//
+// This file was called Reports.cs, and that name was wrong. It holds five of the
+// project's ten reports; the other five live in Poam.cs and Controls.cs. A reader
+// who saw "Reports" reasonably expected all of them, counted five, and went
+// looking for the rest.
+//
+// Every other file here is named for its SUBJECT — Poam, Controls, Ingest,
+// Schema, Generator, PluginCatalog — and each owns that subject end to end.
+// Poam.cs both writes commitments and reads them back. This file is the odd one
+// out only because findings are written elsewhere, by Ingest.cs.
+//
+// Three subjects, three files. Reports about a thing live with the thing.
 //
 // NOTICE WHAT IS NOT HERE ANY MORE.
 //
@@ -26,14 +38,14 @@ namespace ScanIngest;
 //
 // That is the difference between `psql -f queries.sql` and this file. psql SHOWS
 // you the data. This DELIVERS the data to a program — typed, named, awaitable.
-// The SQL was never the point of Reports.cs; it was just the largest thing in it.
+// The SQL was never the point of this file; it was just the largest thing in it.
 //
 // Dapper is what makes point 1 work: you give it SQL and a type, it gives you
 // instances of that type. It matches result columns to constructor parameters by
 // name, ignoring case and underscores.
 // =============================================================================
 
-public static class Reports
+public static class Findings
 {
     /// <summary>
     /// Open findings grouped by severity, for the most recent scan only.

@@ -108,7 +108,7 @@ for (var week = 0; week < 6; week++)
         + $"   +{sync.Opened,-4} ~{sync.Reopened,-4} -{sync.Closed}");
 }
 
-Console.WriteLine($"  total fact rows: {await Reports.TotalFactRowsAsync(conn)}");
+Console.WriteLine($"  total fact rows: {await Findings.TotalFactRowsAsync(conn)}");
 
 // ------------------------------------------------------- idempotency check
 // Re-ingest the final scan verbatim. If the primary key is doing its job, the
@@ -119,25 +119,25 @@ Console.WriteLine("\n[3] idempotency — re-ingesting the last scan");
 
 // C#: `runs[^1]` is the LAST element — `^` counts from the end, so `^1` is final
 // C#: and `^2` the one before. Java: runs.get(runs.size() - 1).
-var before  = await Reports.TotalFactRowsAsync(conn);
+var before  = await Findings.TotalFactRowsAsync(conn);
 var replay  = await Ingest.IngestAsync(conn, runs[^1], generator.NextScanReplay());
-var after   = await Reports.TotalFactRowsAsync(conn);
+var after   = await Findings.TotalFactRowsAsync(conn);
 
 Console.WriteLine($"  before {before}, re-inserted {replay}, after {after}"
                   + (before == after ? "   OK — no double counting" : "   MISMATCH"));
 
 // ----------------------------------------------------------------- reports
 Console.WriteLine("\n[4] open findings by severity — latest scan");
-foreach (var r in await Reports.BySeverityAsync(conn))
+foreach (var r in await Findings.BySeverityAsync(conn))
     Console.WriteLine($"  {r.Label,-9} {r.N,6}");
 
 Console.WriteLine("\n[5] change since previous scan");
-foreach (var r in await Reports.DeltaAsync(conn))
+foreach (var r in await Findings.DeltaAsync(conn))
     Console.WriteLine($"  {r.Status,-11} {r.N,6}");
 
 Console.WriteLine("\n[6] POA&M aging — how long has each open finding been open");
 Console.WriteLine($"  {"severity",-9} {"count",6} {"avg days",10}");
-foreach (var r in await Reports.AgingAsync(conn))
+foreach (var r in await Findings.AgingAsync(conn))
 {
     var label = r.Severity switch
     {
@@ -148,7 +148,7 @@ foreach (var r in await Reports.AgingAsync(conn))
 
 Console.WriteLine("\n[7] high+critical trend, run over run  (LAG window function)");
 Console.WriteLine($"  {"scan date",-12} {"high+crit",10} {"change",8}");
-foreach (var r in await Reports.TrendAsync(conn))
+foreach (var r in await Findings.TrendAsync(conn))
 {
     var delta = r.Delta is null ? "  —" : (r.Delta > 0 ? $"+{r.Delta}" : $"{r.Delta}");
     Console.WriteLine($"  {r.ScannedAt:yyyy-MM-dd}   {r.HighCrit,10} {delta,8}");

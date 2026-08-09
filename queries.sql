@@ -18,14 +18,14 @@
 
 
 -- =============================================================================
--- Reports.cs -> TotalFactRowsAsync
+-- Findings.cs -> TotalFactRowsAsync
 -- The simplest one. Every finding, every scan.
 -- =============================================================================
 SELECT COUNT(*) FROM finding;
 
 
 -- =============================================================================
--- Reports.cs -> BySeverityAsync
+-- Findings.cs -> BySeverityAsync
 -- Open findings by severity, LATEST SCAN ONLY.
 --
 -- The `latest` CTE picks one scan; the join to it filters everything else out.
@@ -45,7 +45,7 @@ ORDER BY f.severity DESC;
 
 
 -- =============================================================================
--- Reports.cs -> TrendAsync
+-- Findings.cs -> TrendAsync
 -- High+critical per scan, with the change since the previous scan.
 --
 -- Deliberately does NOT filter to one scan — the question is how the number
@@ -64,7 +64,7 @@ ORDER BY scanned_at;
 
 
 -- =============================================================================
--- Reports.cs -> DeltaAsync
+-- Findings.cs -> DeltaAsync
 -- New / resolved / still-open, comparing the two most recent scans.
 --
 -- ROW_NUMBER() picks the last two runs without hardcoding any dates.
@@ -100,7 +100,7 @@ ORDER BY 1;
 
 
 -- =============================================================================
--- Reports.cs -> AgingAsync
+-- Findings.cs -> AgingAsync
 -- How long currently-open findings have been open, averaged per severity.
 --
 -- Measured from FIRST OBSERVATION, not from when the row was inserted — that

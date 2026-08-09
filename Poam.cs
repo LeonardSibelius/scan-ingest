@@ -6,7 +6,7 @@ namespace ScanIngest;
 // =============================================================================
 // Poam.cs — the commitment register.
 //
-// Everything in Ingest.cs and Reports.cs deals in OBSERVATIONS: the scanner saw
+// Everything in Ingest.cs and Findings.cs deals in OBSERVATIONS: the scanner saw
 // this, on this machine, on this date. Observations are facts about the world and
 // nobody is accountable for them.
 //

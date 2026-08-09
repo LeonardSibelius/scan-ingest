@@ -6,7 +6,7 @@ namespace ScanIngest;
 // This file exists because the interesting queries in this project are all about
 // CHANGE, and change needs history. A single snapshot of "here are 300 problems"
 // supports no useful question. Six weeks of scans where findings persist, get
-// fixed, and come back supports every question in Reports.cs and Poam.cs.
+// fixed, and come back supports every question in Findings.cs and Poam.cs.
 //
 // The generator is therefore not a stub. Getting the churn model wrong makes the
 // reports lie, and it did on the first attempt: with a flat remediation rate the

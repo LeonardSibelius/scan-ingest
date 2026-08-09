@@ -22,7 +22,7 @@ namespace ScanIngest;
 // It is not a free win, and the tradeoff is worth understanding:
 //
 //   LOST   The SQL no longer sits next to the record type it fills. In
-//          Reports.cs you used to see the query and `SeverityRow` within a few
+//          Findings.cs you used to see the query and `SeverityRow` within a few
 //          lines of each other.
 //
 //   LOST   A misspelled query name is no longer a compile error. It is a
@@ -69,7 +69,7 @@ public static class SqlLibrary
     /// The file's shape, which reports.ps1 parses identically:
     ///
     ///     -- ==========================
-    ///     -- Reports.cs -> BySeverityAsync
+    ///     -- Findings.cs -> BySeverityAsync
     ///     -- a description
     ///     -- ==========================
     ///     SELECT ... ;
