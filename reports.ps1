@@ -35,8 +35,11 @@
     WHERE THE SQL LIVES
 
     Not here, and not in the C# either. queries.sql is the single source: this
-    script parses it at startup, and the program reads it through SqlLibrary.
-    Editing that file changes both.
+    script parses it, and the program reads it through SqlLibrary. Editing that
+    file changes both.
+
+    The menu re-reads it before every turn, so you can edit queries.sql in
+    another window, save, press Enter here, and see the change. No restart.
 
     The numbering follows the order of queries.sql. Reorder that file and these
     numbers move with it — the groupings above will still hold, the digits may not.
@@ -105,54 +108,71 @@ if (-not $env:PGPASSWORD) { $env:PGPASSWORD = 'postgres' }
 # So: a rule line starts or ends a header block, a line matching `X.cs -> Method`
 # identifies the report, and everything after the closing rule is its SQL until
 # the next header begins.
+#
+# This is a FUNCTION rather than a block that runs once, so the menu loop can
+# call it again on every turn. queries.sql is a file whose whole purpose is to be
+# edited and experimented with, and a menu that had to be restarted to notice an
+# edit was quietly serving a snapshot taken when it launched.
 
 $sqlPath = Join-Path $PSScriptRoot 'queries.sql'
-if (-not (Test-Path $sqlPath)) {
-    Write-Host "queries.sql not found next to this script." -ForegroundColor Red
-    exit 1
-}
 
-$reports = @()
-$current  = $null
-$inHeader = $false
+function Read-Reports {
+    if (-not (Test-Path $sqlPath)) {
+        Write-Host "queries.sql not found next to this script." -ForegroundColor Red
+        return ,@()
+    }
 
-foreach ($line in Get-Content $sqlPath) {
+    $found    = @()
+    $current  = $null
+    $inHeader = $false
 
-    if ($line -match '^-- =+$') {
+    foreach ($line in Get-Content $sqlPath) {
+
+        if ($line -match '^-- =+$') {
+            if ($inHeader) {
+                # Closing rule: the header is finished, SQL follows.
+                $inHeader = $false
+            }
+            else {
+                # Opening rule: bank whatever we were collecting, start a new block.
+                if ($current -and $current.Method) { $found += $current }
+                $current  = [pscustomobject]@{
+                    Source      = ''
+                    Method      = ''
+                    Description = @()
+                    Sql         = @()
+                }
+                $inHeader = $true
+            }
+            continue
+        }
+
+        if (-not $current) { continue }
+
         if ($inHeader) {
-            # Closing rule: the header is finished, SQL follows.
-            $inHeader = $false
+            if ($line -match '^--\s+(\S+\.cs)\s+->\s+(\S+)\s*$') {
+                $current.Source = $Matches[1]
+                $current.Method = $Matches[2]
+            }
+            elseif ($line -match '^--\s?(.*)$' -and $Matches[1].Trim()) {
+                $current.Description += $Matches[1].Trim()
+            }
         }
         else {
-            # Opening rule: bank whatever we were collecting, start a new block.
-            if ($current -and $current.Method) { $reports += $current }
-            $current  = [pscustomobject]@{
-                Source      = ''
-                Method      = ''
-                Description = @()
-                Sql         = @()
-            }
-            $inHeader = $true
+            $current.Sql += $line
         }
-        continue
     }
+    if ($current -and $current.Method) { $found += $current }
 
-    if (-not $current) { continue }
-
-    if ($inHeader) {
-        if ($line -match '^--\s+(\S+\.cs)\s+->\s+(\S+)\s*$') {
-            $current.Source = $Matches[1]
-            $current.Method = $Matches[2]
-        }
-        elseif ($line -match '^--\s?(.*)$' -and $Matches[1].Trim()) {
-            $current.Description += $Matches[1].Trim()
-        }
-    }
-    else {
-        $current.Sql += $line
-    }
+    # The leading comma is not a typo. PowerShell unrolls an array on its way out
+    # of a function, so a file defining exactly one report would return a bare
+    # object — and $reports.Count would then come back empty instead of 1. The
+    # comma wraps it in an outer array which the unrolling strips, leaving the
+    # real array intact.
+    return ,$found
 }
-if ($current -and $current.Method) { $reports += $current }
+
+$reports = Read-Reports
 
 if ($reports.Count -eq 0) {
     Write-Host "No reports found in queries.sql." -ForegroundColor Red
@@ -226,6 +246,26 @@ if ($Report -gt 0) {
 
 # --- Menu loop ---------------------------------------------------------------
 while ($true) {
+
+    # Re-read queries.sql before drawing the menu, so an edit made in another
+    # window shows up as soon as you come back here. Ten kilobytes per menu turn
+    # is not a cost worth optimising away.
+    #
+    # An empty result keeps the previous list rather than exiting. If the file is
+    # mid-save or has just been broken, dropping someone out of the menu is a
+    # worse answer than saying so and carrying on. A report DISAPPEARING is not
+    # caught by this and should not be — a shorter menu is exactly the signal you
+    # want when a header stops parsing.
+    $fresh = Read-Reports
+    if ($fresh.Count -gt 0) {
+        $reports = $fresh
+    }
+    else {
+        Write-Host ''
+        Write-Host 'queries.sql defines no reports right now — keeping the last good list.' `
+            -ForegroundColor Yellow
+    }
+
     Show-Menu
 
     # Read-Host does not exist in a non-interactive host. Say so plainly rather
