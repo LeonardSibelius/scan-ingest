@@ -5,22 +5,48 @@ using NpgsqlTypes;
 namespace ScanIngest;
 
 // =============================================================================
-// Ingest.cs — getting scan data into the database, fast and exactly once.
+// Ingest.cs — puts one scan into the database.
 //
-// The two-stage load that every serious ingest pipeline converges on:
+// WHERE THIS SITS
 //
-//   STAGE 1  COPY the raw payload into a landing table. Fast, and it makes no
-//            judgement about the data's shape.
-//   STAGE 2  Project it into the typed fact table with ON CONFLICT DO NOTHING.
+// Generator.cs invents the findings. This file stores them. Neither one crosses
+// into the other: Generator holds no database connection, and nothing in here
+// invents a finding — they arrive as a parameter.
 //
-// The obvious question is why not do it in one step. The answer is that COPY —
-// the only genuinely fast bulk path Postgres offers — CANNOT express ON CONFLICT.
-// You can have speed or you can have conflict handling, not both, in one
-// statement. The landing table is what lets you have both: COPY into it at full
-// speed, then a set-based INSERT..SELECT out of it that can deduplicate.
+// That boundary is where the fake data ends. In a real deployment Generator.cs
+// is deleted and something that reads a Nessus export takes its place. Nothing
+// in this file would change, because it never cared where the list came from.
 //
-// So the landing table is not ceremony and it is not "staging because that's what
-// people do". It is the specific structural consequence of one limitation in COPY.
+// HOW ONE SCAN GETS LOADED
+//
+// In two steps, into two different tables, for one specific reason.
+//
+//   STEP 1   COPY every finding into raw_finding, exactly as it arrived.
+//   STEP 2   Read them back out and INSERT them into finding, the real table,
+//            skipping any that are already there.
+//
+// WHY NOT ONE STEP
+//
+// Two things are wanted at once, and no single statement offers both.
+//
+//   FAST         COPY is Postgres's bulk loader. It streams rows straight in
+//                without parsing a separate statement for each one, which is far
+//                quicker than inserting rows one at a time.
+//
+//   RE-RUNNABLE  ON CONFLICT DO NOTHING is an option on INSERT. It says: if this
+//                row is already here, skip it quietly rather than fail. That is
+//                what makes re-loading the same scan harmless.
+//
+// COPY has no ON CONFLICT clause. Not disabled, not discouraged — the command
+// simply does not have one. So a single COPY straight into `finding` would be
+// fast, and would fail the second time anybody ran it.
+//
+// Hence two tables. raw_finding is a scratch pad with no keys and no rules (a
+// "landing table", in the usual jargon), so COPY can pour into it at full speed.
+// Then one ordinary INSERT moves the data across into `finding` — and an INSERT
+// is allowed to say ON CONFLICT DO NOTHING.
+//
+// Speed on the way in, safety on the way across.
 // =============================================================================
 
 public static class Ingest
