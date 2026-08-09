@@ -93,15 +93,30 @@ public sealed class Generator
     {
         if (first)
         {
-            // Seed: give each host between 4 and 11 distinct findings. The loop
-            // condition counts what actually landed rather than how many times we
-            // tried, because the HashSet silently drops duplicate picks.
+            // Seed: give each host between 4 and 11 distinct findings.
+            //
+            // Count what actually landed, not how many times we tried — a random
+            // (host, plugin) pick that is already open is a collision, and
+            // HashSet.Add returns false for it without adding anything. Counting
+            // attempts would leave hosts short of their target.
+            //
+            // `added` is tracked rather than recounted. Asking the set "how many
+            // entries does this host have" on every iteration walks the whole
+            // collection each time, which turns a linear loop into a quadratic
+            // one. Add already tells us whether it inserted; believe it.
+            //
+            // Terminates because the target (max 11) is always below the number of
+            // plugins (20), so there is always another distinct pair available.
+            // Raise that ceiling past _plugins.Length and this loop will hang.
             _open = [];
             foreach (var host in _hosts)
             {
-                var count = _rng.Next(4, 12);
-                while (_open.Count(o => o.Host == host) < count)
-                    _open.Add((host, _rng.Next(_plugins.Length)));
+                var target = _rng.Next(4, 12);
+                var added  = 0;
+
+                while (added < target)
+                    if (_open.Add((host, _rng.Next(_plugins.Length))))
+                        added++;
             }
         }
         else
