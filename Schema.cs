@@ -144,12 +144,34 @@ public static class Schema
             family     text NOT NULL         -- 'SC'
         );
 
+        -- The scanner's plugin catalogue. A plugin is one specific check, and its
+        -- id is stable forever, which is what makes a finding trackable across
+        -- scans. In reality this is a feed from the scanner vendor, arriving
+        -- separately from any scan results.
+        CREATE TABLE IF NOT EXISTS plugin (
+            plugin_id int      PRIMARY KEY,
+            name      text     NOT NULL,
+            severity  smallint NOT NULL     -- the vendor's default rating
+        );
+
         -- Which scanner plugins constitute evidence for which control.
         -- Many-to-many on purpose: one plugin can bear on several controls, and
         -- a control is evidenced by many plugins. Some controls have no technical
         -- evidence at all — they are procedural, and no scanner will ever see them.
+        --
+        -- BOTH columns are foreign keys, and that is deliberate. This table is
+        -- curated policy — a human decided each row — so a mapping that points at
+        -- a plugin or a control that does not exist is simply an error, and the
+        -- database should refuse it.
+        --
+        -- Note the contrast with `finding`, which stores plugin_id with NO foreign
+        -- key. That asymmetry is intentional: the fact table has to accept whatever
+        -- the scanner sends, including a plugin shipped this morning that our
+        -- catalogue has not caught up with yet. Constraining it would mean an
+        -- ingest that fails the day the vendor publishes a new check. Observations
+        -- are taken as given; policy is held to account.
         CREATE TABLE IF NOT EXISTS plugin_control (
-            plugin_id  int  NOT NULL,
+            plugin_id  int  NOT NULL REFERENCES plugin(plugin_id),
             control_id text NOT NULL REFERENCES control(control_id),
             PRIMARY KEY (plugin_id, control_id)
         );

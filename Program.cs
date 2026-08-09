@@ -161,7 +161,11 @@ foreach (var i in await Poam.WorstOverdueAsync(conn))
 // engine: the scanner's view of the estate against the assessor's view of the
 // controls, and the places they disagree.
 Console.WriteLine("\n[11] second source — eMASS control-status export");
+// Plugins first: plugin_control now has a foreign key pointing at them, so the
+// catalogue has to exist before any mapping can reference it.
+var pluginCount = await PluginCatalog.SeedAsync(conn);
 await Controls.SeedCatalogAsync(conn);
+Console.WriteLine($"  plugin catalog: {pluginCount} checks");
 var exported = await Controls.GenerateExportAsync(
     conn, new Guid("7f9d2c10-0000-4000-8000-000000000001"));
 Console.WriteLine($"  control catalog seeded, {exported} control statuses exported");

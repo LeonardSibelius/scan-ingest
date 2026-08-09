@@ -38,38 +38,19 @@ public sealed class Generator
     private readonly string[] _hosts =
         Enumerable.Range(1, 40).Select(i => $"host-{i:D3}.mil").ToArray();
 
-    // The plugin catalogue: real Nessus plugin ids, names, and severities. A
-    // plugin is one specific check, and its id is stable forever, which is what
-    // makes a finding trackable across scans.
+    // The catalogue of checks this scanner knows. It now lives in PluginCatalog
+    // rather than here, because the generator is no longer its only consumer —
+    // the database holds it as reference data, and plugin_control has a foreign
+    // key pointing at it.
+    //
+    // That split matches reality: a scanner's plugin catalogue is a vendor feed
+    // that arrives on its own schedule, quite separately from any scan results.
     //
     // C#: `(int Id, string Name, short Severity)` is a TUPLE type — an ad-hoc
     // C#: group of values with names, no class needed. Java has no equivalent;
     // C#: you would declare a record or a small class.
-    // C#: `[ ... ]` is a collection expression — shorthand for `new T[] { ... }`.
     // C#: Access the parts by name: `_plugins[3].Severity`.
-    private readonly (int Id, string Name, short Severity)[] _plugins =
-    [
-        (10107, "HTTP Server Type and Version",              0),
-        (11219, "Nessus SYN scanner",                        0),
-        (19506, "Nessus Scan Information",                   0),
-        (25220, "TCP/IP Timestamps Supported",               1),
-        (10863, "SSL Certificate Information",               1),
-        (51192, "SSL Certificate Cannot Be Trusted",         2),
-        (57582, "SSL Self-Signed Certificate",               2),
-        (42873, "SSL Medium Strength Cipher Suites",         2),
-        (26928, "SSL Weak Cipher Suites Supported",          3),
-        (78479, "SSLv3 Padding Oracle (POODLE)",             3),
-        (73412, "OpenSSL Heartbeat Information Disclosure",  4),
-        (97833, "SMBv1 Remote Code Execution",               4),
-        (35291, "SSL Certificate Signed With Weak Hash",     2),
-        (90317, "SSH Weak Algorithms Supported",             2),
-        (12085, "Apache Tomcat Default Files",               1),
-        (11213, "HTTP TRACE / TRACK Methods Allowed",        2),
-        (58751, "SSL/TLS Suboptimal Renegotiation",          1),
-        (20007, "SSL Version 2 and 3 Protocol Detection",    3),
-        (15901, "SSL Certificate Expiry",                    3),
-        (45411, "SSL Certificate with Wrong Hostname",       2),
-    ];
+    private readonly (int Id, string Name, short Severity)[] _plugins = PluginCatalog.All;
 
     // Public vulnerability identifiers, for the few findings that have one. Most
     // do not: a weak cipher suite is a configuration weakness, not a named CVE.
