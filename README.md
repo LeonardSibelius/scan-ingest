@@ -158,15 +158,20 @@ psql -U postgres -d scanprep -f queries.sql
 both the program and the menu read it — the C# through `SqlLibrary.Get("...")`,
 the PowerShell by parsing the file directly.
 
-It was two copies for about a day, guarded by a test that compared them. That test
-worked; it caught three real differences the day it was written. But keeping two
-copies in step is a smaller idea than having one, so the duplication went instead.
+**What that buys:**
 
-**The tradeoff is real and worth understanding.** Moving SQL out of the code costs
-you two things:
+- **The file runs as-is.** Any block pastes straight into a database console and
+  executes — nothing to substitute, nothing to fill in first. This is the
+  requirement that drives the rest, and it is why no query takes a parameter and
+  why `WorstOverdueAsync` writes `LIMIT 10` as a literal.
+- **One copy.** The program and the menu cannot disagree, because there is no
+  second thing to disagree with.
 
-- The query no longer sits beside the record type it fills
-- A misspelled query name is no longer a compile error — it is a runtime crash
+**What it costs:**
+
+- The query does not sit beside the record type it fills.
+- A misspelled query name is a runtime crash rather than a compile error. The
+  compiler cannot check a string against a file it never reads.
 
 ```bash
 dotnet test ScanIngest.Tests
@@ -176,10 +181,6 @@ Thirteen tests buy the second one back: every name the code looks up is checked 
 build time against what the file actually defines, in both directions. A query the
 code wants but the file lacks fails. A query the file defines but nobody calls
 fails too.
-
-Most teams keep SQL in the code and accept the duplication. This project went the
-other way because it is meant to be **read**, and one copy reads better than two
-plus an explanation of why there are two.
 
 ## Reading the comments
 
@@ -292,8 +293,9 @@ would mean writing the same query worse and then obscuring it.
   Demonstrates **`LAG()` over an aggregate**: group first, then window over the
   groups. The first row's delta is `NULL` and stays `NULL`, because "no change
   recorded" and "change of zero" are different statements.
-- **`TotalFactRowsAsync`** — a row count. Crude, and the exact invariant that
-  would have caught the replay bug this pipeline originally shipped with.
+- **`TotalFactRowsAsync`** — a row count. Crude, and the exact invariant the
+  idempotency check rests on: count, re-ingest the same scan, count again, and
+  the number must not move.
 
 ### `Poam.cs` — commitments, not observations
 
