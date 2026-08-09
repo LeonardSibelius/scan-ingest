@@ -21,7 +21,7 @@
 -- Reports.cs -> TotalFactRowsAsync
 -- The simplest one. Every finding, every scan.
 -- =============================================================================
-SELECT COUNT(*) AS total_findings_all_scans FROM finding;
+SELECT COUNT(*) FROM finding;
 
 
 -- =============================================================================
@@ -219,19 +219,24 @@ control_evidence AS (
     JOIN plugin_control pc ON pc.plugin_id = f.plugin_id
     GROUP BY pc.control_id
 )
-SELECT cs.control_id                  AS control_id,
-       cs.compliance                  AS emass_says,
-       COALESCE(cv.sources, 0)        AS evidence_sources,
-       COALESCE(ce.findings, 0)       AS findings,
-       COALESCE(ce.hosts_affected, 0) AS hosts,
+SELECT cs.control_id                       AS ControlId,
+       c.title                             AS Title,
+       cs.compliance                       AS Compliance,
+       COALESCE(ce.findings, 0)            AS Findings,
+       ce.worst_severity                   AS WorstSeverity,
+       COALESCE(ce.hosts_affected, 0)      AS HostsAffected,
+       COALESCE(cv.sources, 0)             AS EvidenceSources,
        CASE
-           WHEN cv.control_id IS NULL                                   THEN 'not assessable'
-           WHEN cs.compliance = 'Compliant'     AND ce.findings > 0     THEN 'CONTRADICTED'
-           WHEN cs.compliance = 'Non-Compliant' AND ce.findings > 0     THEN 'corroborated'
-           WHEN cs.compliance = 'Non-Compliant'                         THEN 'unevidenced'
+           WHEN COALESCE(cv.sources, 0) = 0
+                THEN 'not assessable'
+           WHEN cs.compliance = 'Compliant'     AND ce.findings > 0
+                THEN 'CONTRADICTED'
+           WHEN cs.compliance = 'Non-Compliant' AND ce.findings > 0
+                THEN 'corroborated'
+           WHEN cs.compliance = 'Non-Compliant'
+                THEN 'unevidenced'
            ELSE 'verified clean'
-       END                            AS verdict,
-       c.title                        AS title
+       END                                 AS Verdict
 FROM control_status cs
 JOIN latest_export le ON le.export_id = cs.export_id
 JOIN control c        ON c.control_id = cs.control_id
@@ -239,8 +244,8 @@ LEFT JOIN coverage cv         ON cv.control_id = cs.control_id
 LEFT JOIN control_evidence ce ON ce.control_id = cs.control_id
 ORDER BY
     CASE
-        WHEN cv.control_id IS NULL THEN 1
         WHEN cs.compliance = 'Compliant' AND ce.findings > 0 THEN 0
+        WHEN COALESCE(cv.sources, 0) = 0 THEN 1
         WHEN cs.compliance = 'Non-Compliant' AND ce.findings > 0 THEN 2
         WHEN cs.compliance = 'Non-Compliant' THEN 3
         ELSE 4

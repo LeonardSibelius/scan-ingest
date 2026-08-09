@@ -152,6 +152,26 @@ it is read-only:
 psql -U postgres -d scanprep -f queries.sql
 ```
 
+### Two copies of the SQL, and the test that keeps them honest
+
+`queries.sql` is a **copy**. The SQL that actually runs lives inside the C#. Nothing
+links them, so editing a query in `Reports.cs` would silently leave `queries.sql`
+wrong — and it would keep working, showing you SQL the program no longer runs.
+
+```bash
+dotnet test ScanIngest.Tests
+```
+
+That test extracts every SQL literal from the sources, extracts every report from
+`queries.sql`, and fails if any report no longer matches. It normalises whitespace,
+comments, case and underscores — the last two because that is exactly the rule
+Dapper matches column names by, so the test is silent about differences that
+cannot matter and loud about every one that can.
+
+One query is exempt and says so: `StatusAsync` assembles its SQL by string
+interpolation, so the two sides cannot be compared as text. The exemption list is
+itself asserted to contain exactly that one entry, so it cannot grow quietly.
+
 ## Reading the comments
 
 The source carries two layers of commentary, and they answer different questions.

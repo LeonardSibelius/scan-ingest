@@ -13,4 +13,10 @@
     <PackageReference Include="Dapper" Version="2.*" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- This project sits at the repository root, so its default source glob
+         would otherwise sweep up the test project's files as well. -->
+    <Compile Remove="ScanIngest.Tests/**" />
+  </ItemGroup>
+
 </Project>
