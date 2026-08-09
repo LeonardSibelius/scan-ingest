@@ -29,8 +29,8 @@ namespace ScanIngest;
 //   GAIN   One copy. The program and the menu cannot disagree, because there is
 //          no second thing to disagree with.
 //
-// Most projects keep SQL in the code and accept the duplication. This one is
-// meant to be read, and one copy is easier to read than two.
+//   GAIN   The file runs as-is. Any block can be pasted straight into a database
+//          console with no substitution, which is why no query takes parameters.
 // =============================================================================
 
 public static class SqlLibrary
