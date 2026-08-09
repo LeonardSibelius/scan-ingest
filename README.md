@@ -122,25 +122,35 @@ and diffing row counts, not by assertion.
 
 ---
 
-## Running the reports by hand
+## Running the reports one at a time
 
-`dotnet run` prints all thirteen sections and there is no way to ask it for just
-one. To poke at a single report, **`queries.sql`** holds every one of them as plain
-SQL, each labelled with the C# method it came from.
+`dotnet run` prints all thirteen sections at once, which is no use when you are
+trying to understand a single query.
 
-Run the lot:
+**`reports.ps1`** is a menu. It shows the SQL, then runs it:
+
+```bash
+.\reports.ps1
+```
+
+```bash
+.\reports.ps1 -List
+```
+
+```bash
+.\reports.ps1 -Report 9
+```
+
+It builds its menu by parsing **`queries.sql`** at startup — there is no second
+copy of the SQL, so editing that file changes the menu.
+
+`queries.sql` also stands alone if you would rather work in psql directly. Every
+report is in it as plain SQL, labelled with the C# method it came from, and all of
+it is read-only:
 
 ```bash
 psql -U postgres -d scanprep -f queries.sql
 ```
-
-Or open a session and paste them one at a time:
-
-```bash
-psql -U postgres -d scanprep
-```
-
-Everything in that file is read-only.
 
 ## Reading the comments
 
