@@ -10,6 +10,24 @@
 -- Edit a query here and both of them change.
 --
 --
+-- WHAT IS IN HERE, AND WHAT IS NOT
+--
+-- Reads only. All ten blocks below are SELECTs, and nothing in this file changes
+-- any data. The writes — INSERT, UPDATE, DELETE, COPY, CREATE — are all in the
+-- C#: Schema.cs, Ingest.cs, Poam.cs, Controls.cs, PluginCatalog.cs.
+--
+-- That split is not housekeeping. Every write in this project takes parameters,
+-- because it puts different values in each time — and a parameter placeholder is
+-- precisely what this file cannot hold. psql has no value to substitute for one,
+-- so a single @name anywhere below would make `psql -f queries.sql` fail to
+-- parse. It is the same constraint that makes WorstOverdueAsync write LIMIT 10
+-- as a literal.
+--
+-- So the writes could not live here even if that were wanted. What the rule buys
+-- is that anything in this file can be pasted into a console and run without
+-- reading it first to find out what it does.
+--
+--
 -- THE COMMENT BLOCKS BELOW ARE NOT DECORATION
 --
 -- Postgres throws them away. The two parsers live on them. Every report must
@@ -39,7 +57,8 @@
 -- On Windows, psql is not on your PATH. The full path is:
 --     "C:\Program Files\PostgreSQL\17\bin\psql.exe"
 --
--- Every query is read-only. Nothing here changes any data.
+-- Read-only, all of it. Paste anything below into a console without checking
+-- first to see what it does.
 -- =============================================================================
 
 
