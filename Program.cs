@@ -7,8 +7,8 @@
 // it against a human assessor's control assessment to find where the two
 // disagree.
 //
-// Two things it is NOT, because the phrase "continuous monitoring" gets used to
-// mean more than this:
+// Three things it is NOT, because the phrase "continuous monitoring" gets used
+// to mean more than this:
 //
 //   It is batch, not real time. Six weekly scans, loaded in one go.
 //
@@ -17,6 +17,17 @@
 //   would be nothing to correlate, and the most valuable row this program can
 //   produce is precisely the one where a human said "compliant" and the scanner
 //   disagrees.
+//
+//   It is not a long enough window to exercise the SLA table. The six scans
+//   span FIVE WEEKS — 2026-07-03 to 2026-08-07, seven days apart — so nothing
+//   in the database can be more than 35 days old. Criticals (15-day deadline)
+//   and highs (30-day) can therefore go overdue; mediums need 90 days, lows
+//   180, informational 365, and the data simply does not reach that far.
+//
+//   Which means "no overdue mediums" in these reports says the window is
+//   short, not that mediums are getting fixed. Worth knowing before quoting a
+//   number off this: a demo whose time span is shorter than its own deadlines
+//   will always look better than the thing it is demonstrating.
 //
 // This file runs top to bottom, once: set up the database, loop six times
 // loading a scan and reconciling the commitments, prove that reloading changes
