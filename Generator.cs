@@ -21,8 +21,9 @@ namespace ScanIngest;
 //
 // That memory is what every report in this project runs on. A finding present in
 // both weeks is "still open". One that disappears was "resolved". One that shows
-// up is "new". Six independent random snapshots would support none of those
-// words, and the whole point of continuous monitoring is the words.
+// up is "new". Six independent random snapshots could not tell you which of those
+// three things happened — and telling you which is the whole point of continuous
+// monitoring.
 //
 // Remediation is weighted by severity — a critical is far likelier to be fixed
 // between scans than an informational one — so serious problems clear quickly
@@ -32,9 +33,10 @@ namespace ScanIngest;
 // =============================================================================
 
 /// <summary>
-/// Produces a sequence of scans with realistic churn. Seeded, so the whole
-/// program is reproducible — the same numbers appear in the README, in the
-/// commit history, and on your screen.
+/// Produces a sequence of scans that change realistically from week to week —
+/// some problems fixed, some new ones appearing. Seeded, so the whole program
+/// is reproducible — the same numbers appear in the README, in the commit
+/// history, and on your screen.
 /// </summary>
 // C#: `sealed` = Java `final` on a class. Nobody can subclass this.
 public sealed class Generator
@@ -162,6 +164,7 @@ public sealed class Generator
             // That weighting is what gives the aging report something to say.
             // Flatten these rates to one number and every severity comes back
             // averaging the same number of days open.
+            //
             // The ones fixed this week are collected into a list first and
             // removed afterwards. Removing items from a collection while looping
             // over that same collection is not allowed.
