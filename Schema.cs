@@ -130,6 +130,17 @@ public static class Schema
         -- date they promised. This is the artifact an Authorizing Official reads,
         -- and the reason the numbers upstream have to be exactly right.
         --
+        -- The people behind the columns, since the whole point is accountability:
+        --   owner is an ISSO (Information System Security Officer) — the person who
+        --     writes and maintains each POA&M day to day. The owner values below
+        --     (ISSO-Alpha..Foxtrot) stand in for that.
+        --   An SCA (Security Control Assessor) produces the findings a POA&M opens
+        --     from; that is the assessed_by on the control_status table.
+        --   An ISSM (Security Manager) approves the register, and the Authorizing
+        --     Official reads it to decide whether the leftover risk is worth an ATO.
+        -- The chain: SCA finds the gap -> ISSO writes the POA&M -> ISSM approves ->
+        -- AO accepts the risk or does not.
+        --
         -- Note it is NOT partitioned and NOT keyed on scan date: a POA&M outlives
         -- the scan that discovered it. That difference — observations partitioned
         -- by time, commitments keyed by identity — is the whole modelling decision.
@@ -139,7 +150,7 @@ public static class Schema
             plugin_id   int      NOT NULL,
             plugin_name text     NOT NULL,
             severity    smallint NOT NULL,
-            owner       text     NOT NULL,
+            owner       text     NOT NULL,   -- the ISSO accountable for this gap
             opened_on   date     NOT NULL,
             due_on      date     NOT NULL,
             closed_on   date,
