@@ -84,8 +84,9 @@ SELECT COUNT(*) FROM finding;
 -- Findings.cs -> BySeverityAsync
 -- Open findings by severity, LATEST SCAN ONLY.
 --
--- The `latest` CTE picks one scan; the join to it filters everything else out.
--- Drop those two pieces and you get the same problems counted six times over.
+-- The `latest` block finds the newest scan and holds its id. Joining to it keeps
+-- only that scan's rows. Drop the block and the join, and the same problems get
+-- counted once for every scan they appear in — six times over.
 -- =============================================================================
 WITH latest AS (
     SELECT scan_run_id
@@ -105,7 +106,9 @@ ORDER BY f.severity DESC;
 -- High+critical per scan, with the change since the previous scan.
 --
 -- Deliberately does NOT filter to one scan — the question is how the number
--- moved across all six. LAG() reaches back to the previous grouped row.
+-- moved across all six. LAG() reads a value from the previous row: here, the
+-- previous scan's high+critical count. Subtract that from this scan's, and you
+-- have the change.
 -- =============================================================================
 SELECT scanned_at AS ScannedAt,
        COUNT(*) FILTER (WHERE severity >= 3) AS HighCrit,
@@ -123,9 +126,14 @@ ORDER BY scanned_at;
 -- Findings.cs -> DeltaAsync
 -- New / resolved / still-open, comparing the two most recent scans.
 --
--- ROW_NUMBER() picks the last two runs without hardcoding any dates.
--- FULL OUTER JOIN is what makes all three categories fall out of one query:
--- an inner join would only ever show findings present in BOTH scans.
+-- ROW_NUMBER() numbers the scans newest-first: the latest is 1, the one before
+-- it is 2. Then rn = 1 and rn = 2 below pick those two — so this always compares
+-- "this scan" against "the one before it" without naming any dates.
+--
+-- FULL OUTER JOIN lines the two scans up side by side and keeps a row even when
+-- one side is empty. In this week only = "new"; last week only = "resolved";
+-- both = "still open". A plain (inner) join keeps only rows in BOTH, so it could
+-- never show new or resolved.
 -- =============================================================================
 WITH runs AS (
     SELECT scan_run_id,
@@ -159,8 +167,9 @@ ORDER BY 1;
 -- Findings.cs -> AgingAsync
 -- How long currently-open findings have been open, averaged per severity.
 --
--- Measured from FIRST OBSERVATION, not from when the row was inserted — that
--- would measure the pipeline instead of the estate.
+-- Age is measured from when the problem was FIRST SEEN, not from when this
+-- program happened to load the row. Measuring from load time would tell you how
+-- long ago the pipeline ran, not how long the machine has had the problem.
 -- =============================================================================
 WITH latest AS (
     SELECT scan_run_id, scanned_at
@@ -187,9 +196,10 @@ ORDER BY f.severity DESC;
 -- Poam.cs -> StatusAsync
 -- Open commitments per severity, and how many blew their deadline.
 --
--- "As of" is the date of the most recent SCAN, not today. If the scanner has
--- not run for three weeks, nothing has been observed for three weeks, and
--- ageing against wall-clock time would invent overdue days nothing supports.
+-- "Overdue" is measured against the date of the most recent SCAN, not today's
+-- date. If the scanner has not run for three weeks, nothing has been checked for
+-- three weeks — and counting those three weeks as overdue would invent lateness
+-- that no scan supports.
 -- =============================================================================
 WITH asof AS (SELECT MAX(scanned_at)::date AS d FROM scan_run)
 SELECT p.severity AS Severity,
