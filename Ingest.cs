@@ -44,6 +44,21 @@ namespace ScanIngest;
 // is allowed to say ON CONFLICT DO NOTHING.
 //
 // Speed on the way in, safety on the way across.
+//
+// WHY THE LANDING COLUMN IS JSONB
+//
+// raw_finding stores each finding as one jsonb blob rather than as typed columns,
+// for the same reason a landing table exists at all: to accept whatever the
+// scanner sends without deciding its shape yet. A real export carries dozens of
+// fields that change between versions; a single json column takes all of them,
+// and stage 2 pulls out only the five this project uses.
+//
+// jsonb and not json — Postgres has both. `json` keeps the raw text and re-parses
+// it on every read. `jsonb` parses once, on the way in, into a binary form that
+// is fast to read and can be indexed. Stage 2 reads back into this data with ->>,
+// and there is a GIN index on it (see Schema.cs), so jsonb is the one that fits.
+// The rule of thumb: `json` if you only ever store it, `jsonb` if you read INTO
+// it.
 // =============================================================================
 
 public static class Ingest
