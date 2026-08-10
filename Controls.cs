@@ -32,11 +32,18 @@ namespace ScanIngest;
 /// fine when they are not.
 ///
 /// Comparing the two requires one more thing: something has to say which scanner
-/// check counts as evidence for which requirement. That is the Evidence table
-/// immediately below, and it is the join that makes the whole comparison possible.
+/// check counts as evidence for which requirement. That is the Evidence list
+/// immediately below (it loads into the plugin_control table), and it is the join
+/// that makes the whole comparison possible.
 /// </summary>
 public static class Controls
 {
+    // A NOTE ON NAMES, because it trips people up: the two lists in this file are
+    // plain C# arrays, and the database tables they load into have DIFFERENT names.
+    // Catalog loads into the control table. Evidence loads into plugin_control.
+    // If you are reading this next to the schema, that is why there is no table
+    // called "Evidence" in it.
+    //
     // The control catalogue — the list of security requirements a system is
     // assessed against. This is REFERENCE data, not accumulating data: unlike
     // finding and poam, which grow with every scan, this is a short fixed list
@@ -49,7 +56,7 @@ public static class Controls
     // SI-4 — procedural controls, where the evidence is a person's judgement, not
     // a scan). The mix is what gives the correlation report both a "CONTRADICTED"
     // case and a "not assessable" case to find. Which plugin evidences which
-    // control is the Evidence table just below — and the four procedural controls
+    // control is the Evidence list just below — and the four procedural controls
     // appear nowhere in it, which is exactly what makes them "not assessable".
     private static readonly (string Id, string Title, string Family)[] Catalog =
     [
@@ -65,7 +72,8 @@ public static class Controls
         ("SI-4",  "Information System Monitoring",                "SI"),
     ];
 
-    /// Plugin-to-control evidence mapping. Deliberately incomplete: plugins
+    /// Plugin-to-control evidence mapping — loaded into the plugin_control table.
+    /// Deliberately incomplete: plugins
     /// 11219 and 19506 are scanner artefacts that map to nothing, and AC-2 /
     /// AU-6 / IA-5 / SI-4 are procedural controls no scanner can speak to.
     /// Both gaps are real and both show up in the reports.
@@ -99,8 +107,9 @@ public static class Controls
     ];
 
     /// <summary>
-    /// Loads the control catalogue and the plugin→control evidence map into the
-    /// database. Idempotent, so it runs on every startup without checking.
+    /// Loads the two arrays above into the database: Catalog into the control
+    /// table, Evidence into plugin_control. Idempotent, so it runs on every
+    /// startup without checking.
     ///
     /// The evidence map is the join key for this whole file. Without it the two
     /// sources have nothing in common — the scanner talks about hosts and plugins,
