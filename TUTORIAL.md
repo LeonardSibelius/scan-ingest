@@ -144,7 +144,7 @@ Two more things: every SQL statement ends with a semicolon, and `\q` quits.
 \dt
 ```
 
-**You should see** nine relations:
+**You should see** ten tables (Postgres calls them "relations"):
 
 ```
  public | control         | table
@@ -152,15 +152,20 @@ Two more things: every SQL statement ends with a semicolon, and `\q` quits.
  public | finding         | partitioned table
  public | finding_2026_07 | table
  public | finding_2026_08 | table
+ public | plugin          | table
  public | plugin_control  | table
  public | poam            | table
  public | raw_finding     | table
  public | scan_run        | table
 ```
 
-**What this shows.** Three groups. `scan_run`, `raw_finding` and `finding` are the
-scanner data. `poam` is the commitments. `control`, `control_status` and
-`plugin_control` are the compliance side.
+**What this shows.** They fall into groups. `scan_run`, `raw_finding` and
+`finding` are the scanner data. `poam` is the commitments. `control` and
+`control_status` are the compliance side — the requirements and the human's
+verdict on each. `plugin` is the scanner's catalogue of checks, and
+`plugin_control` maps those checks to the controls they count as evidence for.
+(`finding_2026_07` and `finding_2026_08` are not separate tables you use — they
+are the two monthly pieces of `finding`, explained in Step 12.)
 
 Notice `finding` says **partitioned table**, and that `finding_2026_07` and
 `finding_2026_08` sit beside it. That is one logical table physically split by
@@ -400,9 +405,10 @@ FROM finding GROUP BY 1 ORDER BY 1;
  finding_2026_08 |   276
 ```
 
-**What this shows.** You queried `finding`, but the rows physically live in two
-separate monthly tables. Postgres routes them on write and searches only the
-relevant ones on read.
+**What this shows.** You asked `finding` for its rows, but they physically live in
+two separate monthly tables. Postgres files each new row into the right month by
+itself, and when you ask a question it only opens the months it needs — it left
+July's table unread just now.
 
 Prove that second part:
 
@@ -717,13 +723,14 @@ right there above its own output.
 Trace one row. Find `CM-6` in the results, then find these lines in the SQL:
 
 ```sql
-WHEN cv.control_id IS NULL                               THEN 'not assessable'
+WHEN COALESCE(cv.sources, 0) = 0                         THEN 'not assessable'
 WHEN cs.compliance = 'Compliant'     AND ce.findings > 0 THEN 'CONTRADICTED'
 ```
 
-`CM-6` has evidence sources, so the first test fails. It is marked `Compliant` and
-has 30 live findings, so the second one hits. **That is the entire mechanism by
-which this system catches a lie**, and it is four lines of `CASE`.
+`CM-6` has evidence sources — plugins that can check it — so `sources` is not zero
+and the first test fails. It is marked `Compliant` and has 30 live findings, so the
+second one hits. **That is the entire mechanism by which this system catches a
+lie**, and it is a few lines of `CASE`.
 
 ---
 
@@ -752,12 +759,14 @@ Run one report and exit — handy once you know the numbers:
 ## Where to go next
 
 - **`README.md`** has the design reasoning: why the landing table exists, why the
-  commitment register is keyed differently from the findings table, and what the
-  two bugs were.
-- The **"A walk through the code"** section of the README lists every method and
-  what it does.
-- The source files themselves are commented throughout, including notes for readers
-  coming from Java on the C# idioms used.
+  commitment register is keyed differently from the findings table, and the two
+  bugs that had to be fixed. Its "How it's built" section maps every file to what
+  it owns, in one line each.
+- The source files themselves carry the detail. Every method has a plain summary
+  above it, and the non-obvious SQL is explained line by line — including notes
+  for readers coming from Java on the C# used.
+- **`queries.sql`** is every report as plain, runnable SQL, each one labelled with
+  the method it belongs to and a comment on how it works.
 
 ---
 
