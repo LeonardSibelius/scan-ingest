@@ -21,6 +21,21 @@ namespace ScanIngest;
 // A finding belongs to the scan that produced it. A commitment belongs to the
 // problem, and survives every scan in between — which is why it cannot be
 // partitioned by scan date and cannot be keyed on one.
+//
+// WHAT THIS TABLE IS NOT
+//
+// Both words in "Plan of Action and Milestones" are missing from the columns,
+// and that is deliberate. A real POA&M carries a written plan — the remediation
+// narrative a human types, "patch the test ring by the 15th, production by the
+// 30th, firewall port 445 in the meantime" — plus dated milestones, a point of
+// contact, resources, status updates. That text lives in eMASS and is authored
+// by a person.
+//
+// This table models only the skeleton a machine can maintain on its own: what
+// the problem is (host, plugin, severity), who owns it, when it opened, when it
+// is due, and when it closed. Opening on first sighting, computing the deadline,
+// closing when the finding clears, flagging overdue — a pipeline can do all of
+// that. Writing the plan it cannot, so the plan is not here.
 // =============================================================================
 
 public static class Poam
