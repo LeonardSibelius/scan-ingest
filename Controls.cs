@@ -43,13 +43,14 @@ public static class Controls
     // that the other tables point at. It is meant to be small.
     //
     // Real NIST SP 800-53 has on the order of a thousand controls. This hand-
-    // picks ten, and the choice is deliberate: five of them a scanner CAN see
-    // (CM-6, CM-7, SC-8, SC-13, SC-17 — configuration and crypto, which a plugin
-    // can test), and four it CANNOT (AC-2, AU-6, IA-5, SI-4 — procedural
-    // controls, where the evidence is a person's judgement, not a scan). The mix
-    // is what gives the correlation report both a "CONTRADICTED" case and a "not
-    // assessable" case to find. Which plugin evidences which control is the
-    // Evidence table just below.
+    // picks ten, and the choice is deliberate: six of them a scanner CAN see
+    // (CM-6, CM-7, SC-8, SC-13, SC-17, SI-2 — configuration, crypto, and patch
+    // level, all things a plugin can test), and four it CANNOT (AC-2, AU-6, IA-5,
+    // SI-4 — procedural controls, where the evidence is a person's judgement, not
+    // a scan). The mix is what gives the correlation report both a "CONTRADICTED"
+    // case and a "not assessable" case to find. Which plugin evidences which
+    // control is the Evidence table just below — and the four procedural controls
+    // appear nowhere in it, which is exactly what makes them "not assessable".
     private static readonly (string Id, string Title, string Family)[] Catalog =
     [
         ("AC-2",  "Account Management",                          "AC"),
