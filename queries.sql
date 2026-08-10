@@ -172,9 +172,21 @@ ORDER BY 1;
 -- Findings.cs -> AgingAsync
 -- How long currently-open findings have been open, averaged per severity.
 --
--- Age is measured from when the problem was FIRST SEEN, not from when this
--- program happened to load the row. Measuring from load time would tell you how
--- long ago the pipeline ran, not how long the machine has had the problem.
+-- Age needs TWO dates, which is why there are two CTEs. `latest` is the ruler's
+-- zero mark — the newest scan, i.e. "now". `first_seen` is where each problem
+-- started: MIN(scanned_at) per (host, plugin), the EARLIEST scan that saw it. A
+-- problem open since July appears in all six scans; MIN grabs the first.
+--
+-- Age is therefore measured from when the problem was FIRST SEEN, not from when
+-- this program loaded the row. Measuring from load time would tell you how long
+-- ago the pipeline ran, not how long the machine has had the problem.
+--
+-- The epoch line turns "now minus first-seen" into a number of days:
+--   scanned_at - first_seen        gives an INTERVAL, which prints as "35 days"
+--   EXTRACT(EPOCH FROM ...)         gives its length in SECONDS (a real number)
+--   / 86400                         seconds -> days (86400 = 60*60*24)
+-- The detour through seconds is needed because you cannot AVG() an interval that
+-- prints as words; you can only average a number.
 -- =============================================================================
 WITH latest AS (
     SELECT scan_run_id, scanned_at
