@@ -178,6 +178,12 @@ public static class Schema
 
         -- An eMASS control-status export. One row per control per export.
         --
+        -- This is the SECOND SOURCE, and the human one. finding holds what the
+        -- scanner SAW; this holds what a person DECIDED — a Compliant or Non-
+        -- Compliant verdict on each control, written by an assessor. assessed_by
+        -- names them: "SCA-Team-1" is a Security Control Assessor. Comparing this
+        -- against finding, and reporting where they disagree, is the whole project.
+        --
         -- Keyed on (export_id, control_id), NOT on the export date. An export is
         -- identified by what it is, not by when it happened: two assessments can
         -- legitimately share a date — a correction, or a re-run after a finding
