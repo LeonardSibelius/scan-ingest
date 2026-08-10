@@ -80,8 +80,9 @@ var runs      = new List<ScanRun>();
 // since scanned_at is part of the fact table's primary key, nothing collides and
 // every row inserts a second time. Re-running would silently double the data.
 //
-// Deterministic timestamps plus deterministic run ids make replay a no-op, which
-// is what "idempotent" has to mean for a pipeline that gets re-driven.
+// Deterministic timestamps and deterministic run ids mean running the program
+// again changes nothing — which is what "idempotent" has to mean for a pipeline
+// that gets re-run.
 var startedAt = new DateTimeOffset(2026, 7, 3, 9, 0, 0, TimeSpan.Zero);
 
 // C#: A LOCAL FUNCTION — a method declared inside another scope, here at file
@@ -111,7 +112,9 @@ for (var week = 0; week < 6; week++)
     var inserted = await Ingest.IngestAsync(conn, run, findings);
 
     // Reconcile the commitment register on every ingest, not once at the end.
-    // This is what makes the close and reopen paths real rather than decorative.
+    // Reconciling after every scan is what actually exercises the close and
+    // reopen paths — a register updated only at the end would never see a
+    // finding come back.
     var sync = await Poam.SyncAsync(conn);
     runs.Add(run);
 
@@ -185,15 +188,15 @@ foreach (var i in await Poam.WorstOverdueAsync(conn))
 // engine: the scanner's view of the estate against the assessor's view of the
 // controls, and the places they disagree.
 Console.WriteLine("\n[11] second source — eMASS control-status export");
-// Plugins first: plugin_control now has a foreign key pointing at them, so the
-// catalogue has to exist before any mapping can reference it.
+// Plugins first: plugin_control has a foreign key pointing at the plugin
+// catalogue, so the catalogue has to exist before any mapping can reference it.
 var pluginCount = await PluginCatalog.SeedAsync(conn);
 await Controls.SeedCatalogAsync(conn);
 Console.WriteLine($"  plugin catalog: {pluginCount} checks");
 var exported = await Controls.GenerateExportAsync(
     conn, new Guid("7f9d2c10-0000-4000-8000-000000000001"));
 Console.WriteLine($"  control catalog seeded, {exported} control statuses exported");
-Console.WriteLine("  (assessment dated to the FIRST scan — five weeks stale, as they are)");
+Console.WriteLine("  (assessment dated to the FIRST scan — five weeks stale, which is how real ones usually are)");
 
 Console.WriteLine("\n[12] correlation — scanner vs. compliance record");
 Console.WriteLine(
