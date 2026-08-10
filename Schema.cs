@@ -162,10 +162,25 @@ public static class Schema
             family     text NOT NULL         -- 'SC'
         );
 
-        -- The scanner's plugin catalogue. A plugin is one specific check, and its
-        -- id is stable forever, which is what makes a finding trackable across
-        -- scans. In reality this is a feed from the scanner vendor, arriving
-        -- separately from any scan results.
+        -- The scanner's plugin catalogue — its dictionary of checks. A plugin is
+        -- one specific test ("is SMBv1 enabled", "is the certificate expired"),
+        -- and its id is stable forever, which is what makes a finding trackable
+        -- across scans: plugin 97833 is always SMBv1 RCE, so "still open on
+        -- host-005" means something. In reality this is a feed from the scanner
+        -- vendor, arriving separately from any scan results.
+        --
+        -- This is the scanner-side counterpart to the control table: plugin is the
+        -- scanner's vocabulary, control is the assessor's, and plugin_control is
+        -- the bridge between them. Reference data, and small on purpose — real
+        -- Nessus ships well over a hundred thousand plugins and adds more daily.
+        -- Twenty here is a curated slice spanning every severity and several
+        -- categories, enough to exercise the pipeline and still be readable.
+        --
+        -- severity is the VENDOR'S default rating, 0 (info) to 4 (critical), and
+        -- it is where a finding's severity comes from. Note the severity-0 rows
+        -- like 11219 and 19506: those are the scanner reporting on its own run,
+        -- not a vulnerability. They map to no control, so findings from them
+        -- surface in the coverage-gap report as unfiled.
         CREATE TABLE IF NOT EXISTS plugin (
             plugin_id int      PRIMARY KEY,
             name      text     NOT NULL,
