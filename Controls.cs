@@ -4,16 +4,34 @@ using Npgsql;
 namespace ScanIngest;
 
 /// <summary>
-/// The second source, and the correlation between it and the first.
+/// The second source of data, and the two reports that compare it with the first.
 ///
-/// Nessus answers "what is broken on this host, right now."
-/// eMASS answers "what did the assessor say about this system's controls."
+/// There are two ways to know whether a system is secure, and this project has
+/// both of them.
 ///
-/// Those two are produced by different people on different cadences, and they
-/// drift apart. The gap between them is not noise to be cleaned up — it IS the
-/// product. A control marked Compliant that has live scan evidence against it is
-/// the single most valuable row this system can emit, because it means the
-/// authorisation package is describing a system that no longer exists.
+///   THE MACHINE    A scanner looks at every host and reports what is broken on
+///                  it today. That is Nessus, and Ingest.cs loads its output
+///                  into the finding table.
+///
+///   THE PAPERWORK  A person assesses the system against a list of security
+///                  REQUIREMENTS — accounts are managed, traffic is encrypted,
+///                  flaws get patched — and records one verdict for each:
+///                  Compliant or Non-Compliant. In the US federal world those
+///                  requirements are called controls, they are numbered by NIST
+///                  (AC-2, SC-8, SI-2), and the verdicts live in a system called
+///                  eMASS. This class fakes that export.
+///
+/// The two are produced by different people at different times, so they drift
+/// apart. That drift is not a mess to be tidied away. It is the product.
+///
+/// The row worth finding is a control a person marked COMPLIANT on a system the
+/// scanner is right now reporting as broken. It means the paperwork describes a
+/// system that no longer exists, and somebody senior is being told things are
+/// fine when they are not.
+///
+/// Comparing the two requires one more thing: something has to say which scanner
+/// check counts as evidence for which requirement. That is the Evidence table
+/// immediately below, and it is the join that makes the whole comparison possible.
 /// </summary>
 public static class Controls
 {
