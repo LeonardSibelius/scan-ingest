@@ -126,8 +126,13 @@ ORDER BY scanned_at;
 -- Findings.cs -> DeltaAsync
 -- New / resolved / still-open, comparing the two most recent scans.
 --
--- ROW_NUMBER() numbers the scans newest-first: the latest is 1, the one before
--- it is 2. Then rn = 1 and rn = 2 below pick those two — so this always compares
+-- The OVER keyword makes ROW_NUMBER() a "window function". Where GROUP BY folds
+-- rows together into one summary, a window function keeps every row and lets each
+-- one see the others around it. ORDER BY inside the OVER says in what order.
+--
+-- Here that means: keep all six scans, line them up newest-first, and hand each
+-- one a number. ROW_NUMBER() numbers them — the latest is 1, the one before it
+-- is 2. Then rn = 1 and rn = 2 below pick those two, so this always compares
 -- "this scan" against "the one before it" without naming any dates.
 --
 -- FULL OUTER JOIN lines the two scans up side by side and keeps a row even when
