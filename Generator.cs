@@ -47,13 +47,24 @@ public sealed class Generator
     private readonly Random _rng = new(20260807);
 
     // Forty machines: host-001.mil through host-040.mil.
-    //
-    // C#: Enumerable.Range(1,40) makes 1..40. `.Select(...)` is Java's `.map()`.
-    // C#: `i => ...` is a lambda; Java writes `i -> ...`. One character apart.
-    // C#: `$"...{i:D3}..."` is string interpolation — Java's String.format.
-    // C#: The `:D3` part means "pad to 3 digits", so 7 becomes 007.
-    private readonly string[] _hosts =
-        Enumerable.Range(1, 40).Select(i => $"host-{i:D3}.mil").ToArray();
+    private readonly string[] _hosts = MakeHosts();
+
+    /// <summary>
+    /// Builds the forty host names, host-001.mil through host-040.mil.
+    /// </summary>
+    private static string[] MakeHosts()
+    {
+        var hosts = new string[40];
+
+        for (var i = 0; i < 40; i++)
+        {
+            // i counts 0 to 39, but the names run 001 to 040, so add one.
+            // ToString("D3") pads the number out to three digits: 7 becomes "007".
+            hosts[i] = "host-" + (i + 1).ToString("D3") + ".mil";
+        }
+
+        return hosts;
+    }
 
     // The catalogue of checks this scanner knows. PluginCatalog owns it, because
     // three things need it: this class, the plugin table in the database, and
