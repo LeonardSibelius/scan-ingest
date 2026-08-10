@@ -71,6 +71,24 @@ public static class Schema
         -- Nessus output is nested and its shape drifts between plugin versions,
         -- so we do not force it into columns on the way in. Schema flexibility on
         -- ingest, schema discipline on read.
+        --
+        -- This holds the SAME findings as the finding table, one step earlier: the
+        -- raw blob before stage 2 cracks it open into typed columns. Every row here
+        -- becomes one row there. It is the "inbox"; finding is the filed copy.
+        --
+        -- Two things separate it from finding, both visible in the data:
+        --
+        --   ingested_at is when the PIPELINE loaded the row — real wall-clock time,
+        --   set by DEFAULT now(). It is NOT the scan date. The scan date lives on
+        --   scan_run and is joined in during stage 2. Age must be measured from the
+        --   scan date, never from this; measuring from ingested_at would tell you
+        --   when the program last ran, not how long a machine has had the problem.
+        --
+        --   id is a surrogate key — a plain counter — because this table has no
+        --   natural key. It is an append-only record of what arrived, and the same
+        --   finding can legitimately arrive twice, so it cannot deduplicate itself.
+        --   That is exactly why stage 2 carries the ON CONFLICT: the deduplication
+        --   happens on the way OUT of here, into finding.
         CREATE TABLE IF NOT EXISTS raw_finding (
             id          bigserial   PRIMARY KEY,
             scan_run_id uuid        NOT NULL REFERENCES scan_run(scan_run_id),
