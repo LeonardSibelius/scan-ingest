@@ -138,13 +138,7 @@ foreach (var r in await Findings.DeltaAsync(conn))
 Console.WriteLine("\n[6] POA&M aging — how long has each open finding been open");
 Console.WriteLine($"  {"severity",-9} {"count",6} {"avg days",10}");
 foreach (var r in await Findings.AgingAsync(conn))
-{
-    var label = r.Severity switch
-    {
-        4 => "critical", 3 => "high", 2 => "medium", 1 => "low", _ => "info"
-    };
-    Console.WriteLine($"  {label,-9} {r.N,6} {r.AvgDaysOpen,10:F1}");
-}
+    Console.WriteLine($"  {r.Label,-9} {r.N,6} {r.AvgDaysOpen,10:F1}");
 
 Console.WriteLine("\n[7] high+critical trend, run over run  (LAG window function)");
 Console.WriteLine($"  {"scan date",-12} {"high+crit",10} {"change",8}");
@@ -171,14 +165,8 @@ foreach (var o in await Poam.ByOwnerAsync(conn))
 Console.WriteLine("\n[10] worst overdue items — what an AO asks to see");
 Console.WriteLine($"  {"owner",-14} {"host",-16} {"severity",-9} {"due",-11} {"late",5}  plugin");
 foreach (var i in await Poam.WorstOverdueAsync(conn))
-{
-    var label = i.Severity switch
-    {
-        4 => "critical", 3 => "high", 2 => "medium", 1 => "low", _ => "info"
-    };
     Console.WriteLine(
-        $"  {i.Owner,-14} {i.Host,-16} {label,-9} {i.DueOn,-11} {i.DaysOverdue,5}  {i.PluginName}");
-}
+        $"  {i.Owner,-14} {i.Host,-16} {i.Label,-9} {i.DueOn,-11} {i.DaysOverdue,5}  {i.PluginName}");
 
 // ------------------------------------------------- second source + correlation
 // Everything above reads one source. This is where it becomes a correlation
@@ -200,12 +188,22 @@ Console.WriteLine(
     $"  {"control",-7} {"eMASS says",-14} {"sources",7} {"findings",8} {"hosts",6}  verdict");
 foreach (var c in await Controls.CorrelateAsync(conn))
 {
-    var flag = c.Verdict switch
+    // Only two verdicts get called out. CONTRADICTED is the one worth finding;
+    // "not assessable" is worth naming so it is never mistaken for clean.
+    string flag;
+
+    if (c.Verdict == "CONTRADICTED")
     {
-        "CONTRADICTED"   => "  <-- " + c.Title,
-        "not assessable" => "  (" + c.Title + " — no scanner can see this)",
-        _                => ""
-    };
+        flag = "  <-- " + c.Title;
+    }
+    else if (c.Verdict == "not assessable")
+    {
+        flag = "  (" + c.Title + " — no scanner can see this)";
+    }
+    else
+    {
+        flag = "";
+    }
     Console.WriteLine(
         $"  {c.ControlId,-7} {c.Compliance,-14} {c.EvidenceSources,7} {c.Findings,8} "
         + $"{c.HostsAffected,6}  {c.Verdict}{flag}");

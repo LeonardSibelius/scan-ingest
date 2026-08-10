@@ -82,7 +82,26 @@ public class SqlSyncTests
     {
         // The other direction. A query nobody calls is either dead weight or a
         // rename somebody half-finished, and both are worth noticing early.
-        var orphaned = SqlLibrary.Names.Except(NamesTheCodeAsksFor).OrderBy(n => n).ToList();
+        // Every name in the file that no method in the program asks for.
+        var orphaned = new List<string>();
+
+        foreach (var nameInFile in SqlLibrary.Names)
+        {
+            var wanted = false;
+
+            foreach (var nameInCode in NamesTheCodeAsksFor)
+            {
+                if (nameInFile == nameInCode)
+                {
+                    wanted = true;
+                    break;
+                }
+            }
+
+            if (!wanted) orphaned.Add(nameInFile);
+        }
+
+        orphaned.Sort();
 
         Assert.True(orphaned.Count == 0,
             "queries.sql defines queries that no code asks for:\n  " +

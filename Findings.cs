@@ -43,32 +43,40 @@ public static class Findings
     /// Open findings grouped by severity, for the most recent scan only.
     /// </summary>
     /// <returns>One <see cref="SeverityRow"/> per severity present, worst first.</returns>
-    public static async Task<IEnumerable<SeverityRow>> BySeverityAsync(NpgsqlConnection conn) =>
-        await conn.QueryAsync<SeverityRow>(SqlLibrary.Get("BySeverityAsync"));
+    public static async Task<IEnumerable<SeverityRow>> BySeverityAsync(NpgsqlConnection conn)
+    {
+        return await conn.QueryAsync<SeverityRow>(SqlLibrary.Get("BySeverityAsync"));
+    }
 
     /// <summary>
     /// Classifies findings across the two most recent scans as new, resolved, or
     /// still open — the core continuous-monitoring question, since a snapshot
     /// gives you the size of the problem but only a delta shows progress.
     /// </summary>
-    public static async Task<IEnumerable<DeltaRow>> DeltaAsync(NpgsqlConnection conn) =>
-        await conn.QueryAsync<DeltaRow>(SqlLibrary.Get("DeltaAsync"));
+    public static async Task<IEnumerable<DeltaRow>> DeltaAsync(NpgsqlConnection conn)
+    {
+        return await conn.QueryAsync<DeltaRow>(SqlLibrary.Get("DeltaAsync"));
+    }
 
     /// <summary>
     /// How long currently-open findings have been open, averaged per severity.
     /// Measured from first observation, so it reports on the estate rather than
     /// on when the pipeline happened to load a row.
     /// </summary>
-    public static async Task<IEnumerable<AgingRow>> AgingAsync(NpgsqlConnection conn) =>
-        await conn.QueryAsync<AgingRow>(SqlLibrary.Get("AgingAsync"));
+    public static async Task<IEnumerable<AgingRow>> AgingAsync(NpgsqlConnection conn)
+    {
+        return await conn.QueryAsync<AgingRow>(SqlLibrary.Get("AgingAsync"));
+    }
 
     /// <summary>
     /// High-and-critical count per scan with the run-over-run change. The first
     /// row's delta is null and stays null — there is no earlier scan, and "no
     /// change recorded" is a different statement from "change of zero".
     /// </summary>
-    public static async Task<IEnumerable<TrendRow>> TrendAsync(NpgsqlConnection conn) =>
-        await conn.QueryAsync<TrendRow>(SqlLibrary.Get("TrendAsync"));
+    public static async Task<IEnumerable<TrendRow>> TrendAsync(NpgsqlConnection conn)
+    {
+        return await conn.QueryAsync<TrendRow>(SqlLibrary.Get("TrendAsync"));
+    }
 
     /// <summary>
     /// Total rows in the fact table, across every scan. Used by the idempotency
@@ -78,6 +86,8 @@ public static class Findings
     /// ExecuteScalarAsync rather than QueryAsync — one value, not a row. There is
     /// no record type because there is nothing to shape.
     /// </remarks>
-    public static async Task<long> TotalFactRowsAsync(NpgsqlConnection conn) =>
-        await conn.ExecuteScalarAsync<long>(SqlLibrary.Get("TotalFactRowsAsync"));
+    public static async Task<long> TotalFactRowsAsync(NpgsqlConnection conn)
+    {
+        return await conn.ExecuteScalarAsync<long>(SqlLibrary.Get("TotalFactRowsAsync"));
+    }
 }

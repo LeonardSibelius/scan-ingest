@@ -52,13 +52,21 @@ public static class SqlLibrary
     {
         if (Queries.Value.TryGetValue(name, out var sql)) return sql;
 
+        // Sorted so the message reads the same way every time. A dictionary hands
+        // its keys back in whatever order it pleases.
+        var available = new List<string>(Queries.Value.Keys);
+        available.Sort();
+
         throw new KeyNotFoundException(
             $"No SQL named '{name}' in queries.sql. Available: " +
-            string.Join(", ", Queries.Value.Keys.OrderBy(k => k)));
+            string.Join(", ", available));
     }
 
     /// <summary>Every report name defined in queries.sql.</summary>
-    public static IReadOnlyCollection<string> Names => Queries.Value.Keys;
+    public static IReadOnlyCollection<string> Names
+    {
+        get { return Queries.Value.Keys; }
+    }
 
     /// <summary>
     /// Reads queries.sql and splits it into named reports.
@@ -90,10 +98,24 @@ public static class SqlLibrary
         var     sql  = new List<string>();
         var  inHeader = false;
 
+        // Records the block just finished, if it is worth recording. A named
+        // block with nothing but blank lines under it is a header, not a query.
         void Bank()
         {
-            if (name is not null && sql.Any(l => l.Trim().Length > 0))
-                result[name] = string.Join("\n", sql).Trim();
+            if (name is null) return;
+
+            var hasSql = false;
+
+            foreach (var line in sql)
+            {
+                if (line.Trim().Length > 0)
+                {
+                    hasSql = true;
+                    break;
+                }
+            }
+
+            if (hasSql) result[name] = string.Join("\n", sql).Trim();
         }
 
         foreach (var line in File.ReadLines(path))

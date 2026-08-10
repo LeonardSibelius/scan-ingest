@@ -196,14 +196,18 @@ public static class Controls
     ///   verified clean — Compliant, evidence sources exist, they found nothing.
     ///                    The only row you can actually ignore.
     /// </summary>
-    public static async Task<IEnumerable<CorrelationRow>> CorrelateAsync(NpgsqlConnection conn) =>
-        await conn.QueryAsync<CorrelationRow>(SqlLibrary.Get("CorrelateAsync"));
+    public static async Task<IEnumerable<CorrelationRow>> CorrelateAsync(NpgsqlConnection conn)
+    {
+        return await conn.QueryAsync<CorrelationRow>(SqlLibrary.Get("CorrelateAsync"));
+    }
 
     /// <summary>
     /// Findings that map to no tracked control at all. This is an RMF coverage
     /// gap: the scanner is reporting something the authorisation package has no
     /// place to put. Either the mapping is incomplete or the package is.
     /// </summary>
-    public static async Task<IEnumerable<UncoveredRow>> UncoveredAsync(NpgsqlConnection conn) =>
-        await conn.QueryAsync<UncoveredRow>(SqlLibrary.Get("UncoveredAsync"));
+    public static async Task<IEnumerable<UncoveredRow>> UncoveredAsync(NpgsqlConnection conn)
+    {
+        return await conn.QueryAsync<UncoveredRow>(SqlLibrary.Get("UncoveredAsync"));
+    }
 }

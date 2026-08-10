@@ -19,6 +19,35 @@ namespace ScanIngest;
 
 
 // -----------------------------------------------------------------------------
+// Shared helpers
+// -----------------------------------------------------------------------------
+
+/// <summary>
+/// Turns a severity number into the word for it.
+/// </summary>
+/// <remarks>
+/// One place, deliberately. The same five numbers mean the same five things
+/// wherever they appear — on a report row, in the console output, in a log line.
+/// Written out four times, adding a sixth severity means remembering all four,
+/// and the one that gets missed is the one nobody looks at.
+/// </remarks>
+public static class SeverityText
+{
+    public static string Label(int severity)
+    {
+        switch (severity)
+        {
+            case 4:  return "critical";
+            case 3:  return "high";
+            case 2:  return "medium";
+            case 1:  return "low";
+            default: return "info";
+        }
+    }
+}
+
+
+// -----------------------------------------------------------------------------
 // Domain types
 // -----------------------------------------------------------------------------
 
@@ -78,22 +107,11 @@ public record ScanRun(
 /// <summary>How many open findings at each severity, in the latest scan.</summary>
 public record SeverityRow(short Severity, long N)
 {
-    /// <summary>
-    /// Severity as a word rather than a number, for display.
-    ///
-    /// C# note: this is an expression-bodied read-only property — `=>` rather
-    /// than `{ get { return ...; } }`. And `switch` here is a switch
-    /// *expression*: it evaluates to a value, arms are separated by commas, and
-    /// `_` is the default. No `case`, no `break`, no fallthrough.
-    /// </summary>
-    public string Label => Severity switch
+    /// <summary>Severity as a word rather than a number, for display.</summary>
+    public string Label
     {
-        4 => "critical",
-        3 => "high",
-        2 => "medium",
-        1 => "low",
-        _ => "info"
-    };
+        get { return SeverityText.Label(Severity); }
+    }
 }
 
 /// <summary>
@@ -107,7 +125,14 @@ public record DeltaRow(string Status, long N);
 /// aging question — a critical open for ninety days is a very different fact
 /// from a critical found yesterday, even though both are "one critical".
 /// </summary>
-public record AgingRow(short Severity, long N, decimal AvgDaysOpen);
+public record AgingRow(short Severity, long N, decimal AvgDaysOpen)
+{
+    /// <summary>Severity as a word rather than a number, for display.</summary>
+    public string Label
+    {
+        get { return SeverityText.Label(Severity); }
+    }
+}
 
 /// <summary>
 /// High-and-critical count for one scan, alongside the previous scan's count and
@@ -135,10 +160,11 @@ public record PoamSyncResult(int Opened, int Reopened, int Closed);
 /// </summary>
 public record PoamStatusRow(short Severity, long Open, long Overdue, int SlaDays)
 {
-    public string Label => Severity switch
+    /// <summary>Severity as a word rather than a number, for display.</summary>
+    public string Label
     {
-        4 => "critical", 3 => "high", 2 => "medium", 1 => "low", _ => "info"
-    };
+        get { return SeverityText.Label(Severity); }
+    }
 }
 
 /// <summary>Open and overdue counts for one accountable owner.</summary>
@@ -161,7 +187,14 @@ public record PoamItemRow(
     string PluginName,
     short  Severity,
     string DueOn,
-    int    DaysOverdue);
+    int    DaysOverdue)
+{
+    /// <summary>Severity as a word rather than a number, for display.</summary>
+    public string Label
+    {
+        get { return SeverityText.Label(Severity); }
+    }
+}
 
 
 // -----------------------------------------------------------------------------

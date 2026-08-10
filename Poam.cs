@@ -185,8 +185,10 @@ public static class Poam
     /// three weeks, and ageing commitments against wall-clock time would invent
     /// overdue days that no evidence supports.
     /// </summary>
-    public static async Task<IEnumerable<PoamStatusRow>> StatusAsync(NpgsqlConnection conn) =>
-        await conn.QueryAsync<PoamStatusRow>(SqlLibrary.Get("StatusAsync"));
+    public static async Task<IEnumerable<PoamStatusRow>> StatusAsync(NpgsqlConnection conn)
+    {
+        return await conn.QueryAsync<PoamStatusRow>(SqlLibrary.Get("StatusAsync"));
+    }
 
     /// <summary>
     /// The worst overdue items, with enough context to act: owner, machine,
@@ -200,8 +202,10 @@ public static class Poam
     /// has no value for. If the limit ever needs to vary, this one query's SQL
     /// moves back into the code.
     /// </remarks>
-    public static async Task<IEnumerable<PoamItemRow>> WorstOverdueAsync(NpgsqlConnection conn) =>
-        await conn.QueryAsync<PoamItemRow>(SqlLibrary.Get("WorstOverdueAsync"));
+    public static async Task<IEnumerable<PoamItemRow>> WorstOverdueAsync(NpgsqlConnection conn)
+    {
+        return await conn.QueryAsync<PoamItemRow>(SqlLibrary.Get("WorstOverdueAsync"));
+    }
 
     /// <summary>
     /// Open and overdue load per accountable owner. The accountability view: not
@@ -209,6 +213,8 @@ public static class Poam
     /// Sorted by overdue count, because that is the column that needs a
     /// conversation.
     /// </summary>
-    public static async Task<IEnumerable<OwnerLoadRow>> ByOwnerAsync(NpgsqlConnection conn) =>
-        await conn.QueryAsync<OwnerLoadRow>(SqlLibrary.Get("ByOwnerAsync"));
+    public static async Task<IEnumerable<OwnerLoadRow>> ByOwnerAsync(NpgsqlConnection conn)
+    {
+        return await conn.QueryAsync<OwnerLoadRow>(SqlLibrary.Get("ByOwnerAsync"));
+    }
 }
