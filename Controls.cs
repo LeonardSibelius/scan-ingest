@@ -4,7 +4,9 @@ using Npgsql;
 namespace ScanIngest;
 
 /// <summary>
-/// The second source of data, and the two reports that compare it with the first.
+/// The SECOND source of data, and the two reports that compare it against the
+/// first. The first source is the scanner: Ingest.cs loads it into the finding
+/// table, and reports 1 to 8 read that table and nothing else.
 ///
 /// There are two ways to know whether a system is secure, and this project has
 /// both of them.
