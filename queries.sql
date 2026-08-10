@@ -374,6 +374,21 @@ ORDER BY
 -- Controls.cs -> UncoveredAsync
 -- The mirror-image gap: findings from plugins that map to NO tracked control.
 -- Either the mapping is incomplete or the authorisation package is.
+--
+-- The exact opposite of CorrelateAsync's coverage check. That one found CONTROLS
+-- no scanner can see; this finds FINDINGS no control can file. Together they check
+-- coverage from both ends. In this data the two rows are the scanner's own
+-- housekeeping plugins (Nessus SYN scanner, Scan Information) — correctly unmapped.
+-- A real critical showing up here would be a genuine gap: the scanner reporting a
+-- risk the paperwork has nowhere to put.
+--
+-- NOT EXISTS is an ANTI-JOIN — keep a finding only if NO matching plugin_control
+-- row exists for its plugin. A normal join keeps rows that HAVE a match; this
+-- keeps rows that do not. The SELECT 1 is idiomatic: inside EXISTS the columns are
+-- ignored, only whether a row exists matters.
+--
+-- NOT EXISTS rather than NOT IN, deliberately: NOT IN against a set containing any
+-- NULL returns nothing at all, silently. Same choice as the close logic in Poam.cs.
 -- =============================================================================
 WITH latest_scan AS (
     SELECT scan_run_id FROM scan_run ORDER BY scanned_at DESC LIMIT 1
