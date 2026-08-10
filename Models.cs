@@ -1,20 +1,52 @@
 namespace ScanIngest;
 
 // =============================================================================
-// Models.cs — every type that crosses a boundary in this program.
+// Models.cs — the shapes. Every record in this file describes one row.
 //
-// Two kinds of type live here:
+// Nothing here does anything. No logic, no database, no decisions. Each record is
+// a list of fields with their types, and a name for that combination.
 //
-//   1. DOMAIN types (Finding, ScanRun) — what the pipeline moves around.
-//   2. REPORT ROW types (everything below the divider) — the shape of a single
-//      row coming back from a query. Dapper materialises these directly.
+// TWO KINDS OF ROW
 //
-// THE DAPPER CONTRACT, because it explains every `AS SomeName` in the SQL:
-// Dapper matches a result column to a constructor parameter by name, ignoring
-// case and underscores. Postgres folds unquoted identifiers to lower case, so a
-// column aliased `AS AvgDaysOpen` arrives as `avgdaysopen` and still binds to the
-// `AvgDaysOpen` parameter. If a name does not match, that parameter is silently
-// left at its default — which is why the aliases in the SQL are not decoration.
+//   THE PIPELINE   Finding and ScanRun. These move through the program:
+//                  Generator makes Findings, Ingest writes them, the database
+//                  stores them.
+//
+//   THE REPORTS    Everything below the second divider — SeverityRow, TrendRow,
+//                  PoamItemRow and the rest. One per report, describing the row
+//                  that report hands back.
+//
+// WHY THE REPORT ROWS EXIST AT ALL
+//
+// The C# runs a query and gets rows of database output. Something has to turn
+// each of those into an object the program can use — r.Severity, r.N,
+// r.AvgDaysOpen — and that something is Dapper.
+//
+// Dapper matches BY NAME. It reads the column names in the result and looks for
+// fields of the same name on the record. Which is why the SQL is full of aliases:
+//
+//     ROUND(AVG(...), 1) AS AvgDaysOpen
+//
+// The alias is the wire. It is what tells Dapper which field to fill.
+//
+// THE RULE FOR WRITING ONE
+//
+// Spell the alias the way the field is spelled. Case does not matter — DeltaAsync
+// selects `AS status` into a field called Status and that is fine. UNDERSCORES DO
+// MATTER: `AS avg_days_open` does NOT reach a field called AvgDaysOpen.
+//
+// Get it wrong and the program stops, loudly, naming the type and the exact
+// signature it wanted:
+//
+//     InvalidOperationException: A parameterless default constructor or one
+//     matching signature (Int16 severity, Int64 n, Decimal avg_days_open) is
+//     required for ScanIngest.AgingRow materialization
+//
+// That is worth knowing, because it is the good case. These are positional
+// records — the fields are constructor arguments, so Dapper must match every one
+// of them or it cannot build the object at all. A class with settable properties
+// would take what matched, leave the rest at zero or null, and print a wrong
+// report without complaint.
 // =============================================================================
 
 
