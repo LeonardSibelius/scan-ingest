@@ -297,9 +297,19 @@ LIMIT 10;
 -- THE POINT OF THE WHOLE PROJECT: where the scanner and the compliance record
 -- disagree.
 --
--- Five verdicts. `not assessable` is kept distinct from `verified clean`
--- because a control no scanner can see was never checked, and reporting it as
--- clean manufactures confidence for an Authorizing Official.
+-- Four CTEs feed one verdict. latest_scan and latest_export pick which scan and
+-- which assessment to compare; control_evidence counts the findings against each
+-- control; and coverage counts how many scanner plugins can speak to each control
+-- at all. That last one is the whole trick.
+--
+-- Five verdicts, and `not assessable` is kept distinct from `verified clean`.
+-- Both have zero findings, so on the finding count alone they look identical —
+-- but they are opposite facts: "we looked and it was fine" versus "nothing could
+-- look". coverage is what tells them apart. A control with no plugins mapped to it
+-- never appears in coverage, so the LEFT JOIN leaves its sources NULL, COALESCE
+-- turns that into 0, and the CASE tests `sources = 0` FIRST — before anything
+-- else — and stops at 'not assessable'. Reporting such a control as clean would
+-- manufacture confidence for an Authorizing Official that nothing supports.
 -- =============================================================================
 WITH latest_scan AS (
     SELECT scan_run_id FROM scan_run ORDER BY scanned_at DESC LIMIT 1
