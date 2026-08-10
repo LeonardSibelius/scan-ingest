@@ -190,7 +190,7 @@ public record PoamSyncResult(int Opened, int Reopened, int Closed);
 /// that deadline is. <see cref="SlaDays"/> is carried so the report can show the
 /// promise next to the performance without the caller hardcoding the policy.
 /// </summary>
-public record PoamStatusRow(short Severity, long Open, long Overdue, int SlaDays)
+public record PoamStatusRow(short Severity, long Open, long Overdue, int SlaDays, int RomToClear)
 {
     /// <summary>Severity as a word rather than a number, for display.</summary>
     public string Label

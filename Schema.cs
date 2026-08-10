@@ -153,6 +153,12 @@ public static class Schema
             owner       text     NOT NULL,   -- the ISSO accountable for this gap
             opened_on   date     NOT NULL,
             due_on      date     NOT NULL,
+            -- ROM: Rough Order of Magnitude, a ballpark of the effort to fix this
+            -- one gap, in hours. Set from severity at open time and never changed,
+            -- exactly like due_on. A real ROM is often a cost figure written by a
+            -- person; hours from severity is a simple, honest stand-in. Summed
+            -- across the open backlog it answers "roughly how much work to clear it".
+            rom_hours   smallint NOT NULL,
             closed_on   date,
             CONSTRAINT poam_natural_key UNIQUE (host, plugin_id)
         );

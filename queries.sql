@@ -226,6 +226,11 @@ ORDER BY f.severity DESC;
 -- A note on reading the result: only criticals and highs ever show as overdue
 -- here, because this data spans 35 days and a medium's deadline is 90. "0 overdue
 -- mediums" means the window is short, NOT that mediums are being kept on time.
+--
+-- RomToClear is the Rough Order of Magnitude: SUM of the per-gap effort estimate
+-- (rom_hours) over the open commitments at each severity. It answers "roughly how
+-- much work is the open backlog at this severity", and summed across severities,
+-- the whole backlog.
 -- =============================================================================
 WITH asof AS (SELECT MAX(scanned_at)::date AS d FROM scan_run)
 SELECT p.severity AS Severity,
@@ -233,7 +238,8 @@ SELECT p.severity AS Severity,
        COUNT(*) FILTER (WHERE p.due_on < (SELECT d FROM asof)) AS Overdue,
        MAX(CASE p.severity
                WHEN 4 THEN 15 WHEN 3 THEN 30 WHEN 2 THEN 90
-               WHEN 1 THEN 180 ELSE 365 END) AS SlaDays
+               WHEN 1 THEN 180 ELSE 365 END) AS SlaDays,
+       SUM(p.rom_hours)::int AS RomToClear
 FROM poam p
 WHERE p.closed_on IS NULL
 GROUP BY p.severity

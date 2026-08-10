@@ -33,9 +33,10 @@ namespace ScanIngest;
 //
 // This table models only the skeleton a machine can maintain on its own: what
 // the problem is (host, plugin, severity), who owns it, when it opened, when it
-// is due, and when it closed. Opening on first sighting, computing the deadline,
-// closing when the finding clears, flagging overdue — a pipeline can do all of
-// that. Writing the plan it cannot, so the plan is not here.
+// is due, when it closed, and a rough effort estimate (rom_hours). Opening on
+// first sighting, computing the deadline, estimating the effort, closing when the
+// finding clears, flagging overdue — a pipeline can do all of that. Writing the
+// plan it cannot, so the plan is not here.
 // =============================================================================
 
 public static class Poam
@@ -57,6 +58,25 @@ public static class Poam
             WHEN 2 THEN 90    -- medium
             WHEN 1 THEN 180   -- low
             ELSE 365          -- informational
+        END
+        """;
+
+    /// <summary>
+    /// Rough Order of Magnitude — the estimated effort to remediate one gap, in
+    /// hours, by severity. Same shape and same one-code-point rule as
+    /// <see cref="SlaCase"/>: set from severity at open time, stored, never
+    /// recalculated. A real ROM is usually a cost estimate a person writes; hours
+    /// derived from severity is a deliberate simplification. The point is the
+    /// aggregate — sum it over the open register and you have a rough figure for
+    /// how much work the backlog represents, which is what StatusAsync reports.
+    /// </summary>
+    public const string RomCase = """
+        CASE severity
+            WHEN 4 THEN 16    -- critical — patch, test, deploy, verify
+            WHEN 3 THEN 8     -- high
+            WHEN 2 THEN 4     -- medium
+            WHEN 1 THEN 2     -- low
+            ELSE 1            -- informational
         END
         """;
 
@@ -112,7 +132,7 @@ public static class Poam
                 FROM finding GROUP BY host, plugin_id
             )
             INSERT INTO poam
-                (host, plugin_id, plugin_name, severity, owner, opened_on, due_on)
+                (host, plugin_id, plugin_name, severity, owner, opened_on, due_on, rom_hours)
             SELECT f.host,
                    f.plugin_id,
                    f.plugin_name,
@@ -127,7 +147,10 @@ public static class Poam
                        [ mod(abs(hashtext(f.host)::bigint), 6) + 1 ],
                    fs.opened_on,
                    -- Deadline = first observation + the SLA for this severity.
-                   fs.opened_on + ({SlaCase.Replace("severity", "f.severity")})
+                   fs.opened_on + ({SlaCase.Replace("severity", "f.severity")}),
+                   -- ROM = the effort estimate for this severity. Stored at open
+                   -- time like the due date, and left untouched on reopen.
+                   ({RomCase.Replace("severity", "f.severity")})
             FROM finding f
             JOIN latest l      ON l.scan_run_id = f.scan_run_id
             JOIN first_seen fs ON fs.host = f.host AND fs.plugin_id = f.plugin_id

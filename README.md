@@ -258,10 +258,16 @@ Reconciliation always compares against the newest observed scan, not the scan ju
 ingested, so a late backfill of an old scan cannot reopen or close commitments on
 stale data.
 
-*(This is a minimal register: it tracks the lifecycle a machine can maintain —
-what, who, opened, due, closed. The written plan and the milestones that give
-"Plan of Action and Milestones" its name are free text a human authors in eMASS.
-A pipeline can open, date and close a commitment; it cannot write the plan.)*
+Each open commitment also carries a **ROM** (Rough Order of Magnitude) — a rough
+effort estimate in hours, set from severity at open time like the due date.
+Summed over the open register, it answers "roughly how much work is the backlog,"
+which is one of the things a continuous-monitoring product is expected to report.
+
+*(This is still a minimal register: it tracks the lifecycle a machine can
+maintain — what, who, opened, due, effort, closed. The written plan and the
+milestones that give "Plan of Action and Milestones" its name are free text a
+human authors in eMASS. A pipeline can open, date, estimate and close a
+commitment; it cannot write the plan.)*
 
 ---
 

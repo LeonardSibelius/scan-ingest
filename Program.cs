@@ -168,9 +168,14 @@ foreach (var r in await Findings.TrendAsync(conn))
 // This is where the pipeline stops describing the estate and starts holding
 // people to something.
 Console.WriteLine("\n[8] open POA&Ms against remediation SLA");
-Console.WriteLine($"  {"severity",-9} {"open",6} {"overdue",8} {"SLA days",9}");
+Console.WriteLine($"  {"severity",-9} {"open",6} {"overdue",8} {"SLA days",9} {"ROM hrs",8}");
+long romToClear = 0;
 foreach (var r in await Poam.StatusAsync(conn))
-    Console.WriteLine($"  {r.Label,-9} {r.Open,6} {r.Overdue,8} {r.SlaDays,9}");
+{
+    romToClear += r.RomToClear;
+    Console.WriteLine($"  {r.Label,-9} {r.Open,6} {r.Overdue,8} {r.SlaDays,9} {r.RomToClear,8}");
+}
+Console.WriteLine($"  rough order of magnitude to clear the open backlog: {romToClear} hours");
 
 Console.WriteLine("\n[9] overdue load by owner");
 Console.WriteLine($"  {"owner",-16} {"open",6} {"overdue",8}");
