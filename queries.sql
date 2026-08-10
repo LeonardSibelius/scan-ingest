@@ -1,13 +1,24 @@
 -- =============================================================================
 -- queries.sql — every report in this project.
 --
--- This is not a copy of the SQL the program runs. It IS that SQL. Two separate
--- programs read this one file:
+-- This is not a copy of the SQL the program runs. It IS that SQL. Exactly two
+-- pieces of code open this file:
 --
 --     reports.ps1     the PowerShell menu — re-reads it before every menu turn
---     SqlLibrary.cs   which the C# calls to fetch a query by name
+--     SqlLibrary.cs   parses it once, then hands out a query when asked by name
 --
 -- Edit a query here and both of them change.
+--
+-- Nothing else touches it, and the C# reaches it at four removes:
+--
+--     Program.cs
+--        calls Findings.cs, Poam.cs, Controls.cs
+--          which call SqlLibrary.Get("BySeverityAsync")
+--            which reads this file
+--
+-- So Program.cs never mentions queries.sql, and neither does any report method
+-- mention a file path. Each one knows a NAME — the same name written in the
+-- header block below it.
 --
 --
 -- WHAT IS IN HERE, AND WHAT IS NOT
