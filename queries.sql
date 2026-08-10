@@ -213,10 +213,19 @@ ORDER BY f.severity DESC;
 -- Poam.cs -> StatusAsync
 -- Open commitments per severity, and how many blew their deadline.
 --
--- "Overdue" is measured against the date of the most recent SCAN, not today's
--- date. If the scanner has not run for three weeks, nothing has been checked for
--- three weeks — and counting those three weeks as overdue would invent lateness
--- that no scan supports.
+-- asof is a one-row CTE holding the newest scan date. "Overdue" is measured
+-- against THAT, not against today. If the scanner has not run for three weeks,
+-- nothing has been checked for three weeks — and counting those three weeks as
+-- overdue would invent lateness that no scan supports.
+--
+-- SlaDays shows the promise next to the performance: 13 open, deadline 15 days,
+-- 7 already past it. MAX(CASE ...) looks strange wrapping a per-severity constant,
+-- but the rows are grouped by severity, so every row in a group yields the same
+-- number; MAX just lifts that one value out of the group. Any aggregate would do.
+--
+-- A note on reading the result: only criticals and highs ever show as overdue
+-- here, because this data spans 35 days and a medium's deadline is 90. "0 overdue
+-- mediums" means the window is short, NOT that mediums are being kept on time.
 -- =============================================================================
 WITH asof AS (SELECT MAX(scanned_at)::date AS d FROM scan_run)
 SELECT p.severity AS Severity,
