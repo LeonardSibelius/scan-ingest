@@ -1,5 +1,6 @@
 // =============================================================================
-// scan-ingest — a small continuous-monitoring pipeline.
+// scan-ingest — a small continuous-monitoring (ConMon) pipeline.
+// Launch with:  dotnet run
 //
 // It loads what a vulnerability scanner found across six weekly scans, tracks
 // each problem as a commitment with an owner and a deadline, and compares all of
