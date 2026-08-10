@@ -162,28 +162,36 @@ public sealed class Generator
             // That weighting is what gives the aging report something to say.
             // Flatten these rates to one number and every severity comes back
             // averaging the same number of days open.
-            // C#: `.Where(...)` is Java's `.stream().filter(...)`.
-            // C#: `o => { ...; return x; }` is a lambda with a body, for when one
-            // C#: expression is not enough. `o` names each item as we visit it.
-            var resolved = _open.Where(o =>
-            {
-                // C#: a switch EXPRESSION — produces a value. Arms use `=>`,
-                // C#: are separated by commas, and `_` is the default case.
-                // C#: No `case`, no `break`, no accidental fallthrough.
-                var chance = _plugins[o.PluginIdx].Severity switch
-                {
-                    4 => 0.34,   // critical — someone is paged
-                    3 => 0.24,   // high
-                    2 => 0.13,   // medium
-                    1 => 0.07,   // low
-                    _ => 0.04    // informational — nobody is in a hurry
-                };
-                // C#: NextDouble() gives 0.0-1.0. Under the threshold = it happened.
-                return _rng.NextDouble() < chance;
-            }).ToList();   // materialise before mutating — you cannot remove from
-                           // a collection while a LINQ query over it is still lazy
+            // The ones fixed this week are collected into a list first and
+            // removed afterwards. Removing items from a collection while looping
+            // over that same collection is not allowed.
+            var resolved = new List<(string Host, int PluginIdx)>();
 
-            foreach (var r in resolved) _open.Remove(r);
+            foreach (var open in _open)
+            {
+                double chance;
+
+                switch (_plugins[open.PluginIdx].Severity)
+                {
+                    case 4:  chance = 0.34; break;   // critical — someone is paged
+                    case 3:  chance = 0.24; break;   // high
+                    case 2:  chance = 0.13; break;   // medium
+                    case 1:  chance = 0.07; break;   // low
+                    default: chance = 0.04; break;   // informational — no hurry
+                }
+
+                // NextDouble() returns a number from 0.0 up to 1.0. Landing under
+                // the threshold means this one got fixed.
+                if (_rng.NextDouble() < chance)
+                {
+                    resolved.Add(open);
+                }
+            }
+
+            foreach (var r in resolved)
+            {
+                _open.Remove(r);
+            }
 
             // ---- New findings appear ----
             //
@@ -217,7 +225,10 @@ public sealed class Generator
     /// separate from NextScan so that "replay the last scan" cannot accidentally
     /// advance the simulation.
     /// </summary>
-    public List<Finding> NextScanReplay() => Materialise();
+    public List<Finding> NextScanReplay()
+    {
+        return Materialise();
+    }
 
     /// <summary>
     /// Turns the internal (host, pluginIndex) set into full Finding records by
@@ -227,24 +238,44 @@ public sealed class Generator
     /// without it the same logical scan would serialise differently on different
     /// runs and the output would be needlessly unstable to diff.
     /// </summary>
-    // C#: `=>` on a METHOD means "this method is one expression" — there is no
-    // C#: body in braces and no `return` keyword. Java has no equivalent.
-    private List<Finding> Materialise() =>
-        _open
-            // C#: `.Select(...)` is Java's `.map(...)` — transform each item.
-            .Select(o =>
-            {
-                var p = _plugins[o.PluginIdx];
-                // C#: TryGetValue is the lookup that does not throw: it returns
-                // C#: false and leaves `cve` null when the key is missing.
-                // C#: `out var cve` DECLARES the variable right there in the call.
-                // C#: Java would need to declare it on a line above.
-                _cves.TryGetValue(p.Id.ToString(), out var cve);
-                return new Finding(o.Host, p.Id, p.Name, p.Severity, cve);
-            })
-            // C#: OrderBy/ThenBy = Java's Comparator.comparing().thenComparing().
-            .OrderBy(f => f.Host).ThenBy(f => f.PluginId)
-            // C#: `.ToList()` = Java's `.collect(toList())`. Runs the whole chain —
-            // C#: nothing above this line actually executes until now.
-            .ToList();
+    private List<Finding> Materialise()
+    {
+        var findings = new List<Finding>();
+
+        foreach (var open in _open)
+        {
+            var plugin = _plugins[open.PluginIdx];
+
+            // TryGetValue is the lookup that does not throw. When the key is not
+            // there it returns false and leaves cve set to null, which is exactly
+            // what is wanted — most findings have no CVE.
+            string? cve;
+            _cves.TryGetValue(plugin.Id.ToString(), out cve);
+
+            findings.Add(
+                new Finding(open.Host, plugin.Id, plugin.Name, plugin.Severity, cve));
+        }
+
+        findings.Sort(CompareFindings);
+        return findings;
+    }
+
+    /// <summary>
+    /// Orders findings by host, and within a host by plugin id.
+    /// </summary>
+    /// <returns>
+    /// Negative if a comes first, positive if b does, zero if they tie — the
+    /// ordinary comparison contract every sort routine expects.
+    /// </returns>
+    private static int CompareFindings(Finding a, Finding b)
+    {
+        int byHost = a.Host.CompareTo(b.Host);
+
+        if (byHost != 0)
+        {
+            return byHost;
+        }
+
+        return a.PluginId.CompareTo(b.PluginId);
+    }
 }
