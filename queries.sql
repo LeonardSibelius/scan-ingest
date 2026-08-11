@@ -195,6 +195,13 @@ ORDER BY 1;
 --   / 86400                         seconds -> days (86400 = 60*60*24)
 -- The detour through seconds is needed because you cannot AVG() an interval that
 -- prints as words; you can only average a number.
+--
+-- Why "epoch": EPOCH is Postgres's name for Unix time — seconds counted from the
+-- Unix zero-point, midnight on 1970-01-01 UTC (where Unix began counting time).
+-- On a timestamp, EXTRACT(EPOCH FROM ...) returns the seconds since that moment;
+-- on an INTERVAL (what we have here) it returns the total seconds the span holds.
+-- EXTRACT itself is standard SQL, but the EPOCH field is a Postgres extension —
+-- other databases reach Unix seconds their own way.
 -- =============================================================================
 WITH latest AS (
     SELECT scan_run_id, scanned_at
