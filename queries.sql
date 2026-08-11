@@ -180,8 +180,9 @@ ORDER BY 1;
 -- Findings.cs -> AgingAsync
 -- How long currently-open findings have been open, averaged per severity.
 --
--- Age needs TWO dates, which is why there are two CTEs. (A CTE is a WITH block —
--- a named, temporary result that exists only for this one statement.) `latest`
+-- Age needs TWO dates, which is why there are two Common Table Expressions. (A
+-- Common Table Expression is a WITH block — a named, temporary result that exists
+-- only for this one statement.) `latest`
 -- is the reference point we measure from: the newest scan, i.e. "now".
 -- `first_seen` is where each problem started: MIN(scanned_at) per (host, plugin),
 -- the EARLIEST scan that saw it. A problem open since July appears in all six
@@ -230,10 +231,10 @@ ORDER BY f.severity DESC;
 -- Poam.cs -> StatusAsync
 -- Open commitments per severity, and how many have missed their deadline.
 --
--- asof is a one-row CTE holding the newest scan date. "Overdue" is measured
--- against THAT, not against today. If the scanner has not run for three weeks,
--- nothing has been checked for three weeks — and counting those three weeks as
--- overdue would invent lateness that no scan supports.
+-- asof is a one-row Common Table Expression holding the newest scan date.
+-- "Overdue" is measured against THAT, not against today. If the scanner has not
+-- run for three weeks, nothing has been checked for three weeks — and counting
+-- those three weeks as overdue would invent lateness that no scan supports.
 --
 -- SlaDays is the SLA — the Service Level Agreement, the agreed number of days
 -- allowed to fix a finding of this severity (critical 15, high 30, and so on).
@@ -273,10 +274,10 @@ ORDER BY p.severity DESC;
 -- and how many overdue, each owner holds.
 --
 -- Almost the same query as StatusAsync above. Same table, same open filter, same
--- overdue count, same asof CTE — the only real change is GROUP BY p.owner instead
--- of GROUP BY p.severity. That one word is the "per what?" of the report: per
--- severity gives a risk view, per owner gives an accountability view. The rows
--- counted are the same; only the grouping differs.
+-- overdue count, same asof Common Table Expression — the only real change is
+-- GROUP BY p.owner instead of GROUP BY p.severity. That one word is the "per
+-- what?" of the report: per severity gives a risk view, per owner gives an
+-- accountability view. The rows counted are the same; only the grouping differs.
 --
 -- ORDER BY 3 DESC, 1 sorts by COLUMN NUMBER, not name: column 3 (Overdue) largest
 -- first, then column 1 (Owner) alphabetically to break ties. Overdue leads rather
@@ -325,10 +326,13 @@ LIMIT 10;
 -- THE POINT OF THE WHOLE PROJECT: where the scanner and the compliance record
 -- disagree.
 --
--- Four CTEs feed one verdict. latest_scan and latest_export pick which scan and
--- which assessment to compare; control_evidence counts the findings against each
--- control; and coverage counts how many scanner plugins can speak to each control
--- at all. That last one is the key to telling the verdicts apart.
+-- Four Common Table Expressions prepare the pieces, and the final SELECT combines
+-- them into one verdict. (A Common Table Expression is a WITH block — a named,
+-- temporary result used only by this statement.) latest_scan and latest_export
+-- pick which scan and which assessment
+-- to compare; control_evidence counts the findings against each control; and
+-- coverage counts how many scanner plugins can speak to each control at all. That
+-- last one is the key to telling the verdicts apart.
 --
 -- Five verdicts, and `not assessable` is kept distinct from `verified clean`.
 -- Both have zero findings, so on the finding count alone they look identical —
