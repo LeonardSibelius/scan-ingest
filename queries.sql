@@ -233,7 +233,9 @@ ORDER BY f.severity DESC;
 -- nothing has been checked for three weeks — and counting those three weeks as
 -- overdue would invent lateness that no scan supports.
 --
--- SlaDays shows the promise next to the performance: 13 open, deadline 15 days,
+-- SlaDays is the SLA — the Service Level Agreement, the agreed number of days
+-- allowed to fix a finding of this severity (critical 15, high 30, and so on).
+-- It shows the promise next to the performance: 13 open, deadline 15 days,
 -- 7 already past it (the critical row). MAX(CASE ...) looks strange wrapping a
 -- per-severity constant, but the rows are grouped by severity, so every row in a
 -- group yields the same number; MAX just lifts that one value out of the group.
