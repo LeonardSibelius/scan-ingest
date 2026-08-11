@@ -226,7 +226,7 @@ ORDER BY f.severity DESC;
 
 -- =============================================================================
 -- Poam.cs -> StatusAsync
--- Open commitments per severity, and how many blew their deadline.
+-- Open commitments per severity, and how many have missed their deadline.
 --
 -- asof is a one-row CTE holding the newest scan date. "Overdue" is measured
 -- against THAT, not against today. If the scanner has not run for three weeks,
@@ -234,15 +234,16 @@ ORDER BY f.severity DESC;
 -- overdue would invent lateness that no scan supports.
 --
 -- SlaDays shows the promise next to the performance: 13 open, deadline 15 days,
--- 7 already past it. MAX(CASE ...) looks strange wrapping a per-severity constant,
--- but the rows are grouped by severity, so every row in a group yields the same
--- number; MAX just lifts that one value out of the group. Any aggregate would do.
+-- 7 already past it (the critical row). MAX(CASE ...) looks strange wrapping a
+-- per-severity constant, but the rows are grouped by severity, so every row in a
+-- group yields the same number; MAX just lifts that one value out of the group.
+-- Any aggregate would do.
 --
 -- A note on reading the result: only criticals and highs ever show as overdue
 -- here, because this data spans 35 days and a medium's deadline is 90. "0 overdue
 -- mediums" means the window is short, NOT that mediums are being kept on time.
 --
--- RomToClear is the Rough Order of Magnitude: SUM of the per-gap effort estimate
+-- RomToClear is the Rough Order of Magnitude: SUM of the per-item effort estimate
 -- (rom_hours) over the open commitments at each severity. It answers "roughly how
 -- much work is the open backlog at this severity", and summed across severities,
 -- the whole backlog.
