@@ -234,6 +234,15 @@ public static class Schema
         -- names them: "SCA-Team-1" is a Security Control Assessor. Comparing this
         -- against finding, and reporting where they disagree, is the whole project.
         --
+        -- What "export" means: eMASS is the system of record where assessors log the
+        -- verdicts. Getting that data out of eMASS — for a report, an audit, or a
+        -- pipeline like this — is an export: a snapshot of all the current verdicts,
+        -- pulled at one moment. It is a batch extract, the same idea as running an
+        -- extract job against a source system and saving the dated result. export_id
+        -- is which snapshot a row belongs to, exported_at is when it was taken, and
+        -- the verdicts inside are frozen at that moment — they do not change when
+        -- eMASS later does.
+        --
         -- Keyed on (export_id, control_id), NOT on the export date. An export is
         -- identified by what it is, not by when it happened: two assessments can
         -- legitimately share a date — a correction, or a re-run after a finding

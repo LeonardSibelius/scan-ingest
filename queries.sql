@@ -329,10 +329,16 @@ LIMIT 10;
 -- Four Common Table Expressions prepare the pieces, and the final SELECT combines
 -- them into one verdict. (A Common Table Expression is a WITH block — a named,
 -- temporary result used only by this statement.) latest_scan and latest_export
--- pick which scan and which assessment
--- to compare; control_evidence counts the findings against each control; and
--- coverage counts how many scanner plugins can speak to each control at all. That
--- last one is the key to telling the verdicts apart.
+-- pick which scan and which assessment to compare; control_evidence counts the
+-- findings against each control; and coverage counts how many scanner plugins can
+-- speak to each control at all. That last one is the key to telling the verdicts
+-- apart.
+--
+-- "Export" is eMASS jargon: eMASS is the system of record where assessors log the
+-- Compliant / Non-Compliant verdicts, and an export is a snapshot of those
+-- verdicts pulled out at one moment — a batch extract, like an extract job run
+-- against a source system and saved as a dated file. latest_export is the most
+-- recent such snapshot; the query compares it against the newest scan.
 --
 -- Five verdicts, and `not assessable` is kept distinct from `verified clean`.
 -- Both have zero findings, so on the finding count alone they look identical —
