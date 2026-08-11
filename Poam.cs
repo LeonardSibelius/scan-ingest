@@ -115,11 +115,21 @@ public static class Poam
         await using var tx = await conn.BeginTransactionAsync();
 
         // ---------------------------------------------------------------------
-        // OPEN and REOPEN — one upsert handles both.
+        // OPEN and REOPEN — one statement (an "upsert") handles both.
         // ---------------------------------------------------------------------
-        // C# note: this is `string`, not `const string`, because it interpolates
-        // SlaCase.Replace(...) — a method call, which is not a compile-time
-        // constant. `const` here is a compile error, and a slightly cryptic one.
+        // An upsert is insert-or-update in one statement (Postgres's
+        // INSERT ... ON CONFLICT DO UPDATE; DB2 calls it MERGE). It covers two
+        // cases at once: a newly-found problem with no POA&M yet gets a fresh row
+        // INSERTed (OPEN); a problem whose POA&M was closed and has come back
+        // collides on the natural key (host, plugin_id), and ON CONFLICT clears
+        // closed_on to revive it (REOPEN).
+        //
+        // C# note: openSql is a plain `string`, not `const string`. `const` in C#
+        // means the value must be known at compile time (a literal). This one is
+        // built at RUNTIME — it splices in the SlaCase.Replace(...) method call
+        // below — so it cannot be const. (SlaCase itself IS const: plain text, no
+        // method call.) If you "tidy" this to const, the compiler rejects it with
+        // an error that never mentions .Replace, so it reads as cryptic. Leave it.
         string openSql = $"""
             WITH latest AS (
                 SELECT scan_run_id, scanned_at
