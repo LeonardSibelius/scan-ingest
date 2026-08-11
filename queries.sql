@@ -109,6 +109,14 @@ ORDER BY f.severity DESC;
 -- moved across all six. LAG() reads a value from the previous row: here, the
 -- previous scan's high+critical count. Subtract that from this scan's, and you
 -- have the change.
+--
+-- But "the previous row" only means something because of the OVER beside LAG.
+-- OVER (ORDER BY scanned_at) lines the six scans up oldest-first, so to LAG
+-- "the previous row" is "the previous scan." Drop the OVER and LAG has no
+-- defined order to look back through — it could not work. That pairing, LAG
+-- with OVER (ORDER BY ...), is what turns this into a look-back along the
+-- timeline. (The next report, DeltaAsync, explains window functions and OVER
+-- in more depth.)
 -- =============================================================================
 SELECT scanned_at AS ScannedAt,
        COUNT(*) FILTER (WHERE severity >= 3) AS HighCrit,
