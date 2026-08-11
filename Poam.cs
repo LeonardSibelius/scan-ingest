@@ -109,9 +109,14 @@ public static class Poam
     /// <returns>Counts of what moved, so the caller can show the register living.</returns>
     public static async Task<PoamSyncResult> SyncAsync(NpgsqlConnection conn)
     {
-        // One transaction for the whole reconciliation. A crash between the open
-        // pass and the close pass would leave the register describing a state
-        // that never existed.
+        // Both passes below (OPEN, then CLOSE) run inside ONE transaction, started
+        // here and committed at the end. It is all-or-nothing, like DB2's
+        // COMMIT/ROLLBACK: either both passes land or neither does. Without it, a
+        // crash after the open pass but before the close pass would leave the poam
+        // register half-updated — newly-opened problems beside already-fixed ones
+        // that were never closed, a snapshot matching no real scan. The single
+        // transaction means a crash rolls it all back, leaving the register as it
+        // was.
         await using var tx = await conn.BeginTransactionAsync();
 
         // ---------------------------------------------------------------------
