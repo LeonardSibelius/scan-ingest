@@ -326,6 +326,15 @@ LIMIT 10;
 -- THE POINT OF THE WHOLE PROJECT: where the scanner and the compliance record
 -- disagree.
 --
+-- Read the result as two columns from two sources. `compliance` is what the human
+-- paperwork CLAIMS — the assessor's Compliant / Non-Compliant verdict from the
+-- eMASS export. `verdict` is what this query CONCLUDES after checking that claim
+-- against the live scanner. So "Compliant" is a claim, not a fact, which is why a
+-- row can read Compliant / CONTRADICTED (paperwork says fine, scanner found live
+-- problems) or Compliant / not assessable (paperwork says fine, but no plugin can
+-- test that control, so nothing backs the claim up). The rows worth attention are
+-- exactly the ones where the two columns disagree.
+--
 -- Four Common Table Expressions prepare the pieces, and the final SELECT combines
 -- them into one verdict. (A Common Table Expression is a WITH block — a named,
 -- temporary result used only by this statement.) latest_scan and latest_export
