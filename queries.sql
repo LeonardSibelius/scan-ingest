@@ -50,12 +50,12 @@
 --     -- ============================
 --     SELECT ... ;                        <- everything up to the next block
 --
--- The rules of equals signs are the brackets. The arrow line is what makes a
--- block a report rather than just a header — this banner has no arrow line,
--- which is the only reason it is not report number one.
+-- The rows of equals signs mark where each block starts and ends. The arrow line
+-- is what makes a block a report rather than just a header — this banner has no
+-- arrow line, which is the only reason it is not report number one.
 --
--- The spaces around the arrow are load-bearing. Lose one and that report
--- silently disappears from the menu: no error, no warning, just a shorter list.
+-- The spaces around the arrow matter. Lose one and that report silently
+-- disappears from the menu: no error, no warning, just a shorter list.
 -- ScanIngest.Tests exists to catch precisely that.
 --
 --
@@ -180,10 +180,12 @@ ORDER BY 1;
 -- Findings.cs -> AgingAsync
 -- How long currently-open findings have been open, averaged per severity.
 --
--- Age needs TWO dates, which is why there are two CTEs. `latest` is the ruler's
--- zero mark — the newest scan, i.e. "now". `first_seen` is where each problem
--- started: MIN(scanned_at) per (host, plugin), the EARLIEST scan that saw it. A
--- problem open since July appears in all six scans; MIN grabs the first.
+-- Age needs TWO dates, which is why there are two CTEs. (A CTE is a WITH block —
+-- a named, temporary result that exists only for this one statement.) `latest`
+-- is the reference point we measure from: the newest scan, i.e. "now".
+-- `first_seen` is where each problem started: MIN(scanned_at) per (host, plugin),
+-- the EARLIEST scan that saw it. A problem open since July appears in all six
+-- scans; MIN grabs the first.
 --
 -- Age is therefore measured from when the problem was FIRST SEEN, not from when
 -- this program loaded the row. Measuring from load time would tell you how long
@@ -193,7 +195,7 @@ ORDER BY 1;
 --   scanned_at - first_seen        gives an INTERVAL, which prints as "35 days"
 --   EXTRACT(EPOCH FROM ...)         gives its length in SECONDS (a real number)
 --   / 86400                         seconds -> days (86400 = 60*60*24)
--- The detour through seconds is needed because you cannot AVG() an interval that
+-- The conversion to seconds is needed because you cannot AVG() an interval that
 -- prints as words; you can only average a number.
 --
 -- Why "epoch": EPOCH is Postgres's name for Unix time — seconds counted from the
@@ -235,7 +237,7 @@ ORDER BY f.severity DESC;
 --
 -- SlaDays is the SLA — the Service Level Agreement, the agreed number of days
 -- allowed to fix a finding of this severity (critical 15, high 30, and so on).
--- It shows the promise next to the performance: 13 open, deadline 15 days,
+-- It puts the deadline beside the actual result: 13 open, deadline 15 days,
 -- 7 already past it (the critical row). MAX(CASE ...) looks strange wrapping a
 -- per-severity constant, but the rows are grouped by severity, so every row in a
 -- group yields the same number; MAX just lifts that one value out of the group.
@@ -326,7 +328,7 @@ LIMIT 10;
 -- Four CTEs feed one verdict. latest_scan and latest_export pick which scan and
 -- which assessment to compare; control_evidence counts the findings against each
 -- control; and coverage counts how many scanner plugins can speak to each control
--- at all. That last one is the whole trick.
+-- at all. That last one is the key to telling the verdicts apart.
 --
 -- Five verdicts, and `not assessable` is kept distinct from `verified clean`.
 -- Both have zero findings, so on the finding count alone they look identical —
@@ -335,7 +337,7 @@ LIMIT 10;
 -- never appears in coverage, so the LEFT JOIN leaves its sources NULL, COALESCE
 -- turns that into 0, and the CASE tests `sources = 0` FIRST — before anything
 -- else — and stops at 'not assessable'. Reporting such a control as clean would
--- manufacture confidence for an Authorizing Official that nothing supports.
+-- give an Authorizing Official false confidence that no evidence supports.
 -- =============================================================================
 WITH latest_scan AS (
     SELECT scan_run_id FROM scan_run ORDER BY scanned_at DESC LIMIT 1
@@ -398,7 +400,7 @@ ORDER BY
 
 -- =============================================================================
 -- Controls.cs -> UncoveredAsync
--- The mirror-image gap: findings from plugins that map to NO tracked control.
+-- The opposite gap: findings from plugins that map to NO tracked control.
 -- Either the mapping is incomplete or the authorisation package is.
 --
 -- The exact opposite of CorrelateAsync's coverage check. That one found CONTROLS
