@@ -266,19 +266,21 @@ ORDER BY p.severity DESC;
 
 -- =============================================================================
 -- Poam.cs -> ByOwnerAsync
--- Load per accountable owner. Not "how broken is the system" but "who is
--- carrying it, and who is drowning".
+-- Open workload per accountable owner. Where StatusAsync groups by severity to
+-- show risk, this groups by owner to show accountability: how many open items,
+-- and how many overdue, each owner holds.
 --
 -- Almost the same query as StatusAsync above. Same table, same open filter, same
--- overdue count, same asof CTE — the ONLY real change is GROUP BY p.owner instead
+-- overdue count, same asof CTE — the only real change is GROUP BY p.owner instead
 -- of GROUP BY p.severity. That one word is the "per what?" of the report: per
 -- severity gives a risk view, per owner gives an accountability view. The rows
--- are the same; only the buckets differ.
+-- counted are the same; only the grouping differs.
 --
--- ORDER BY 3 DESC, 1 sorts by COLUMN NUMBER, not name: column 3 (overdue), biggest
--- first, then column 1 (owner) alphabetically to break ties. Overdue leads rather
--- than open because overdue is the column that needs a conversation — the busiest
--- owner may be fine; the one missing deadlines is the one to call.
+-- ORDER BY 3 DESC, 1 sorts by COLUMN NUMBER, not name: column 3 (Overdue) largest
+-- first, then column 1 (Owner) alphabetically to break ties. Overdue leads rather
+-- than open because it is the actionable column: an owner with many open items but
+-- none overdue is on schedule, while an owner with overdue items is behind and
+-- needs follow-up.
 -- =============================================================================
 WITH asof AS (SELECT MAX(scanned_at)::date AS d FROM scan_run)
 SELECT p.owner   AS Owner,
