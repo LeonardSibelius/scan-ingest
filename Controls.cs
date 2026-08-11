@@ -4,9 +4,18 @@ using Npgsql;
 namespace ScanIngest;
 
 /// <summary>
-/// The SECOND source of data, and the two reports that compare it against the
-/// first. The first source is the scanner: Ingest.cs loads it into the finding
-/// table, and reports 1 to 8 read that table and nothing else.
+/// Controls.cs is the SECOND source of data, plus the two reports that compare it
+/// against the first. The first source is the scanner: Ingest.cs loads it into the
+/// finding table, and reports 1 to 8 read that table and nothing else. This file
+/// supplies the other side — the human compliance record — and then correlates it
+/// against the scanner.
+///
+/// Like all ten reports, the two here — CorrelateAsync and UncoveredAsync — keep
+/// their SQL in queries.sql. What lives in this file is the C# that runs that SQL
+/// and turns each result row into a typed object Program.cs can use, exactly as
+/// Findings.cs does. This file also does what Findings.cs does not: it WRITES the
+/// second source — seeding the control catalogue and the evidence map, and
+/// generating the fake eMASS export — so the correlation has two sides to compare.
 ///
 /// There are two ways to know whether a system is secure, and this project has
 /// both of them.
