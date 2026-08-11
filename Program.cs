@@ -18,11 +18,15 @@
 //   produce is precisely the one where a human said "compliant" and the scanner
 //   disagrees.
 //
-//   It is not a long enough window to exercise the SLA table. The six scans
-//   span FIVE WEEKS — 2026-07-03 to 2026-08-07, seven days apart — so nothing
-//   in the database can be more than 35 days old. Criticals (15-day deadline)
-//   and highs (30-day) can therefore go overdue; mediums need 90 days, lows
-//   180, informational 365, and the data simply does not reach that far.
+//   It is not a long enough window to exercise the SLA table. The "SLA table"
+//   is the severity-to-deadline schedule — critical 15 days, high 30, medium 90,
+//   low 180, informational 365 — and it is not an actual table but a CASE inside
+//   StatusAsync. "Exercising" it means letting each of those deadlines actually
+//   come due. The six scans span FIVE WEEKS — 2026-07-03 to 2026-08-07, seven
+//   days apart — so nothing in the database can be more than 35 days old.
+//   Criticals (15-day) and highs (30-day) can therefore go overdue; mediums,
+//   lows, and informational need 90, 180, and 365, and the data does not reach
+//   that far.
 //
 //   Which means "no overdue mediums" in these reports says the window is
 //   short, not that mediums are getting fixed. Worth knowing before quoting a
