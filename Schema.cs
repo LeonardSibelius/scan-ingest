@@ -10,12 +10,21 @@ namespace ScanIngest;
 // runs on every deploy of a pipeline like this, and a step that only works
 // against an empty database is a step that fails on every deploy after the first.
 //
-// The schema is the argument this project is really making, so the DDL below
-// carries most of the reasoning. Three tables matter:
+// The DDL below carries most of the project's reasoning. The eight tables, in the
+// order this file creates them:
 //
-//   raw_finding   what the scanner said, untouched, as jsonb
-//   finding       what we can typecheck, partitioned by scan month
-//   poam          what somebody promised, keyed by problem rather than by scan
+//   scan_run        one row per weekly scan — the batch each finding belongs to
+//   raw_finding     what the scanner said, untouched, stored as jsonb
+//   finding         the typed, de-duplicated facts, partitioned by scan month
+//   poam            the fix commitments, keyed by problem rather than by scan
+//   control         the security rules being assessed (NIST 800-53 controls)
+//   plugin          the catalogue of scanner checks (Nessus plugins)
+//   plugin_control  which plugin is evidence for which control (the bridge)
+//   control_status  the human compliance verdicts (the eMASS export)
+//
+// finding is also split into monthly partition tables (finding_2026_07, ...) so
+// old data can be dropped a month at a time. The three whose DDL comments go
+// deepest are raw_finding, finding, and poam.
 // =============================================================================
 
 public static class Schema
