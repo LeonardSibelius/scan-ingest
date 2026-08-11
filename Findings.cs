@@ -4,8 +4,10 @@ using Npgsql;
 namespace ScanIngest;
 
 // =============================================================================
-// Findings.cs holds five of the project's ten reports.
-// The other five live in Poam.cs and Controls.cs.
+// Findings.cs holds the C# side of five of the project's ten reports — the
+// methods that run the queries and turn the rows into typed objects. The SQL for
+// all ten lives in queries.sql; the other five methods are in Poam.cs and
+// Controls.cs.
 //
 // Files in this project are named by SUBJECT — Poam, Controls, Ingest,
 // Schema, Generator, PluginCatalog — and each owns that subject end to end.
