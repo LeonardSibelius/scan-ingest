@@ -47,7 +47,10 @@ using ScanIngest;
 // C#: Because of that wrapper, `await` works directly at file level below,
 // C#: even though there is no `async` keyword in sight.
 
-const string DbName = "scanprep";
+// The target database. Defaults to "scanprep"; override with the SCANPREP_DB
+// environment variable to run against a different database — used to verify the
+// Nessus import against a throwaway database without touching the demo one.
+var DbName = Environment.GetEnvironmentVariable("SCANPREP_DB") ?? "scanprep";
 
 // Connection string comes from the environment if set, otherwise a local default.
 // Never hardcode credentials in a real one — this is a scratch database.
@@ -59,6 +62,18 @@ var baseConn = Environment.GetEnvironmentVariable("SCANPREP_CONN")
 
 var adminConn = $"{baseConn};Database=postgres";
 var appConn   = $"{baseConn};Database={DbName}";
+
+// ---------------------------------------------------------------- import mode
+// `dotnet run -- import <file.nessus>` loads a REAL Nessus export through the
+// SAME pipeline as the synthetic demo below, then exits. `dotnet run` with no
+// args is unchanged. This is the seam the whole project was built around:
+// Generator is only a stand-in, and a real scanner file drops straight into the
+// same Ingest path with nothing downstream changed.
+if (args is ["import", var nessusPath])
+{
+    await ImportNessus(adminConn, appConn, DbName, nessusPath);
+    return;
+}
 
 Console.WriteLine("scan-ingest — a small ConMon pipeline in C# and Postgres");
 Console.WriteLine(new string('=', 62));
@@ -99,6 +114,37 @@ static Guid DeterministicRunId(string source, DateTimeOffset at)
     var bytes = System.Security.Cryptography.MD5.HashData(
         System.Text.Encoding.UTF8.GetBytes($"{source}|{at:O}"));
     return new Guid(bytes);
+}
+
+// Loads a real Nessus .nessus file through the standard ingest + reconcile path
+// and prints a short summary. Opens its own connection, so it shares nothing
+// with the demo above.
+static async Task ImportNessus(string adminConn, string appConn, string dbName, string path)
+{
+    if (!File.Exists(path))
+    {
+        Console.WriteLine($"import: file not found: {path}");
+        return;
+    }
+
+    Console.WriteLine($"scan-ingest — importing Nessus file into database '{dbName}'");
+    Console.WriteLine(new string('=', 62));
+
+    await Schema.EnsureDatabaseAsync(adminConn, dbName);
+    await using var conn = new NpgsqlConnection(appConn);
+    await conn.OpenAsync();
+    await Schema.EnsureSchemaAsync(conn);
+
+    var landed = await NessusImport.ImportFileAsync(conn, path);
+    var sync   = await Poam.SyncAsync(conn);
+
+    Console.WriteLine($"\n  file:            {path}");
+    Console.WriteLine($"  findings landed: {landed}");
+    Console.WriteLine($"  POA&M register:  +{sync.Opened} opened  ~{sync.Reopened} reopened  -{sync.Closed} closed");
+
+    Console.WriteLine("\n  open findings by severity (latest scan):");
+    foreach (var row in await Findings.BySeverityAsync(conn))
+        Console.WriteLine($"    severity {row.Severity}: {row.N}");
 }
 
 for (var week = 0; week < 6; week++)
