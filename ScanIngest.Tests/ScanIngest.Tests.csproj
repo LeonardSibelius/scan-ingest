@@ -23,9 +23,9 @@
          run needs its own copy. Linked rather than duplicated: one file on disk,
          copied to both output folders at build time. -->
     <None Include="..\queries.sql" Link="queries.sql" CopyToOutputDirectory="PreserveNewest" />
-    <!-- The Nessus parser test parses the real sample file, so it needs a copy
-         beside the test binary (under a samples/ subfolder). -->
-    <None Include="..\samples\sample-scan.nessus" Link="samples\sample-scan.nessus" CopyToOutputDirectory="PreserveNewest" />
+    <!-- The parser tests read the real weekly exports, so they need copies
+         beside the test binary (under samples/weekly/). -->
+    <None Include="..\samples\weekly\*.nessus" Link="samples\weekly\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

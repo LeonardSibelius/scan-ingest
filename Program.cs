@@ -2,10 +2,14 @@
 // scan-ingest — a small continuous-monitoring (ConMon) pipeline.
 // Launch with:  dotnet run
 //
-// It loads what a vulnerability scanner found across six weekly scans, tracks
-// each problem as a commitment with an owner and a deadline, and compares all of
-// it against a human assessor's control assessment to find where the two
-// disagree.
+// It reads real Tenable Nessus export files (.nessus) — six weekly scans of a
+// forty-host estate, bundled in samples/weekly — tracks each problem as a
+// commitment with an owner and a deadline, and compares all of it against a
+// human assessor's control assessment to find where the two disagree.
+//
+// Point it at your own scans instead:
+//     dotnet run -- C:\path\to\scans          a directory of .nessus files
+//     dotnet run -- C:\path\to\scan.nessus    a single file
 //
 // Three things it is NOT, because the phrase "continuous monitoring" gets used
 // to mean more than this:
@@ -33,9 +37,10 @@
 //   number off this: a demo whose time span is shorter than its own deadlines
 //   will always look better than the thing it is demonstrating.
 //
-// This file runs top to bottom, once: set up the database, loop six times
-// loading a scan and reconciling the commitments, prove that reloading changes
-// nothing, then ask the database ten questions and print the answers.
+// This file runs top to bottom, once: set up the database, load each scan file
+// in date order and reconcile the commitments after each, prove that re-loading
+// a file changes nothing, then ask the database ten questions and print the
+// answers.
 // =============================================================================
 
 using Npgsql;
@@ -63,17 +68,18 @@ var baseConn = Environment.GetEnvironmentVariable("SCANPREP_CONN")
 var adminConn = $"{baseConn};Database=postgres";
 var appConn   = $"{baseConn};Database={DbName}";
 
-// ---------------------------------------------------------------- import mode
-// `dotnet run -- import <file.nessus>` loads a REAL Nessus export through the
-// SAME pipeline as the synthetic demo below, then exits. `dotnet run` with no
-// args is unchanged. This is the seam the whole project was built around:
-// Generator is only a stand-in, and a real scanner file drops straight into the
-// same Ingest path with nothing downstream changed.
-if (args is ["import", var nessusPath])
-{
-    await ImportNessus(adminConn, appConn, DbName, nessusPath);
-    return;
-}
+// Where the scans come from. Defaults to the six weekly Nessus exports shipped
+// in samples/weekly; pass a path to read your own file or directory instead:
+//
+//     dotnet run                              the six bundled weekly exports
+//     dotnet run -- C:\scans                  every .nessus file in a directory
+//     dotnet run -- C:\scans\monday.nessus    one file
+//
+// Resolved against the binary's own folder rather than the current directory, so
+// the default works the same from `dotnet run` and from a published folder.
+var scanPath = args.Length > 0
+    ? args[0]
+    : Path.Combine(AppContext.BaseDirectory, "samples", "weekly");
 
 Console.WriteLine("scan-ingest — a small ConMon pipeline in C# and Postgres");
 Console.WriteLine(new string('=', 62));
@@ -88,104 +94,55 @@ await Schema.EnsureSchemaAsync(conn);
 Console.WriteLine("  landing table (jsonb), partitioned fact table, indexes — ready");
 
 // ------------------------------------------------------------------ ingest
-Console.WriteLine("\n[2] ingest — six weekly scans, reconciling the POA&M register after each");
+Console.WriteLine("\n[2] ingest — weekly Nessus exports, reconciling the POA&M register after each");
+Console.WriteLine($"  source: {scanPath}");
 Console.WriteLine($"  {"scan",-12} {"raw",6} {"facts",8}   POA&M  open / reopen / close");
 
-var generator = new Generator();
-var runs      = new List<ScanRun>();
-
-// Anchor the scan dates to a FIXED point, not UtcNow. With UtcNow, two runs of
-// this program minutes apart produce timestamps that differ by minutes — and
-// since scanned_at is part of the fact table's primary key, nothing collides and
-// every row inserts a second time. Re-running would silently double the data.
+// Read every .nessus file up front, ordered by the scan timestamp inside each
+// file. Order matters: each scan is compared against the one before it, so
+// feeding them out of sequence would compute every delta backwards.
 //
-// Deterministic timestamps and deterministic run ids mean running the program
-// again changes nothing — which is what "idempotent" has to mean for a pipeline
-// that gets re-run.
-var startedAt = new DateTimeOffset(2026, 7, 3, 9, 0, 0, TimeSpan.Zero);
+// The scan dates come from the files themselves, never from UtcNow. That is what
+// makes re-running this program harmless: scanned_at is part of the fact table's
+// primary key, so a timestamp that shifted between runs would collide with
+// nothing and insert a second copy of every row.
+var scans = NessusImport.LoadAll(scanPath, DateTimeOffset.UtcNow);
 
-// C#: A LOCAL FUNCTION — a method declared inside another scope, here at file
-// C#: level. Java has no equivalent; you would write a private static method.
-// C#: `static` on it means it captures nothing from the surrounding code.
-// C#: `{at:O}` formats the date in round-trip form (2026-07-03T09:00:00.0000000+00:00),
-// C#: which is unambiguous — it matters, because this string becomes an identifier.
-static Guid DeterministicRunId(string source, DateTimeOffset at)
+if (scans.Count == 0)
 {
-    var bytes = System.Security.Cryptography.MD5.HashData(
-        System.Text.Encoding.UTF8.GetBytes($"{source}|{at:O}"));
-    return new Guid(bytes);
+    Console.WriteLine($"  no .nessus files found at: {scanPath}");
+    return;
 }
 
-// Loads a real Nessus .nessus file through the standard ingest + reconcile path
-// and prints a short summary. Opens its own connection, so it shares nothing
-// with the demo above.
-static async Task ImportNessus(string adminConn, string appConn, string dbName, string path)
+foreach (var scan in scans)
 {
-    if (!File.Exists(path))
-    {
-        Console.WriteLine($"import: file not found: {path}");
-        return;
-    }
-
-    Console.WriteLine($"scan-ingest — importing Nessus file into database '{dbName}'");
-    Console.WriteLine(new string('=', 62));
-
-    await Schema.EnsureDatabaseAsync(adminConn, dbName);
-    await using var conn = new NpgsqlConnection(appConn);
-    await conn.OpenAsync();
-    await Schema.EnsureSchemaAsync(conn);
-
-    var landed = await NessusImport.ImportFileAsync(conn, path);
-    var sync   = await Poam.SyncAsync(conn);
-
-    Console.WriteLine($"\n  file:            {path}");
-    Console.WriteLine($"  findings landed: {landed}");
-    Console.WriteLine($"  POA&M register:  +{sync.Opened} opened  ~{sync.Reopened} reopened  -{sync.Closed} closed");
-
-    Console.WriteLine("\n  open findings by severity (latest scan):");
-    foreach (var row in await Findings.BySeverityAsync(conn))
-        Console.WriteLine($"    severity {row.Severity}: {row.N}");
-}
-
-for (var week = 0; week < 6; week++)
-{
-    var scannedAt = startedAt.AddDays(week * 7);
-    // C#: NAMED ARGUMENTS — `ScanRunId:` labels which parameter each value is for.
-    // C#: Optional, but it makes a three-argument constructor readable at the call
-    // C#: site. Java has no equivalent.
-    var run = new ScanRun(
-        ScanRunId: DeterministicRunId("acas-nessus", scannedAt),
-        ScannedAt: scannedAt,
-        Source:    "acas-nessus");
-
-    var findings = generator.NextScan(first: week == 0);
-    var inserted = await Ingest.IngestAsync(conn, run, findings);
+    var result = await NessusImport.IngestAsync(conn, scan);
 
     // Reconcile the commitment register on every ingest, not once at the end.
     // Reconciling after every scan is what actually exercises the close and
     // reopen paths — a register updated only at the end would never see a
     // finding come back.
     var sync = await Poam.SyncAsync(conn);
-    runs.Add(run);
 
     Console.WriteLine(
-        $"  {run.ScannedAt:yyyy-MM-dd} {findings.Count,7} {inserted,8}"
+        $"  {scan.ScannedAt:yyyy-MM-dd} {scan.Findings.Count,7} {result.Landed,8}"
         + $"   +{sync.Opened,-4} ~{sync.Reopened,-4} -{sync.Closed}");
 }
 
 Console.WriteLine($"  total fact rows: {await Findings.TotalFactRowsAsync(conn)}");
 
 // ------------------------------------------------------- idempotency check
-// Re-ingest the final scan verbatim. If the primary key is doing its job, the
-// row count does not move. This is the claim worth being able to demonstrate:
-// scans get re-run and re-delivered, and a pipeline that double-counts on
-// replay will quietly corrupt every number downstream.
-Console.WriteLine("\n[3] idempotency — re-ingesting the last scan");
+// Re-import the final scan FILE, exactly as it arrived the first time. If the
+// primary key is doing its job, the row count does not move. This is the claim
+// worth being able to demonstrate: scan files get re-delivered and re-loaded all
+// the time, and a pipeline that double-counts on replay will quietly corrupt
+// every number downstream.
+Console.WriteLine("\n[3] idempotency — re-importing the last scan file");
 
-// C#: `runs[^1]` is the LAST element — `^` counts from the end, so `^1` is final
-// C#: and `^2` the one before. Java: runs.get(runs.size() - 1).
+// C#: `scans[^1]` is the LAST element — `^` counts from the end, so `^1` is final
+// C#: and `^2` the one before. Java: scans.get(scans.size() - 1).
 var before  = await Findings.TotalFactRowsAsync(conn);
-var replay  = await Ingest.IngestAsync(conn, runs[^1], generator.NextScanReplay());
+var replay  = (await NessusImport.IngestAsync(conn, scans[^1])).Landed;
 var after   = await Findings.TotalFactRowsAsync(conn);
 
 Console.WriteLine($"  before {before}, re-inserted {replay}, after {after}"

@@ -1,7 +1,8 @@
 # scan-ingest
 
 **A pipeline that finds the places where the security paperwork and the security
-scanner disagree.** C# and Postgres. All data synthetic.
+scanner disagree.** C# and Postgres. Reads real Tenable Nessus `.nessus` exports;
+six weekly scans of a forty-host estate are bundled to run against.
 
 ## The problem, in plain language
 
@@ -60,8 +61,9 @@ Five terms, and the rest of this file reads normally:
 | **POA&M** | Plan of Action and Milestones. The register of known gaps — each with an owner and a date they promised to fix it by. |
 | **eMASS** | The Department of Defense system of record holding all of the above for a given system. |
 
-The scanner here is modelled on **Nessus**, the vulnerability scanner most widely
-used in this space. A *finding* is one problem on one machine.
+The scanner is **Nessus** — the vulnerability scanner most widely used in this
+space, and the one ACAS is built on. The pipeline reads its native `.nessus`
+export files. A *finding* is one problem on one machine.
 
 **New to this?** Start with [**OVERVIEW.md**](OVERVIEW.md) — a plain-language map
 with diagrams of the tables and how data is produced (no cybersecurity background
@@ -102,9 +104,24 @@ Then, from the repository root in a fresh terminal so PATH picks up `dotnet`:
 dotnet run
 ```
 
-First run restores packages, creates the `scanprep` database, and prints thirteen
-sections of output. **Running it again changes nothing** — verified by running it
-twice and diffing row counts, not by assertion.
+First run restores packages, creates the `scanprep` database, loads the six
+bundled Nessus exports from `samples/weekly/`, and prints thirteen sections of
+output. **Running it again changes nothing** — verified by running it twice and
+diffing row counts, not by assertion.
+
+### Running it against your own scans
+
+`dotnet run` with no arguments reads `samples/weekly/`. Pass a path to read your
+own Nessus exports instead — a directory of them, or a single file:
+
+```bash
+dotnet run -- /path/to/scans           # every .nessus file in a directory
+dotnet run -- /path/to/scan.nessus     # one file
+```
+
+Files are ordered by the scan timestamp inside each one, not by filename, so the
+week-over-week reports compare the right pairs. Nothing downstream of the parser
+knows or cares where a scan came from.
 
 ## Reading one report at a time
 
@@ -141,26 +158,28 @@ file. Edit a query there and both change.
   second thing to disagree with.
 
 **What it costs:** a misspelled query name is a runtime crash, not a compile error —
-the compiler cannot check a string against a file it never reads. Thirteen tests
-(`dotnet test ScanIngest.Tests`) buy that back: every name the code looks up is
-checked at build time against what the file defines, in both directions.
+the compiler cannot check a string against a file it never reads. The test suite
+(`dotnet test ScanIngest.Tests`) buys that back: every name the code looks up is
+checked at build time against what the file defines, in both directions. The same
+suite covers the Nessus parser, so neither seam can rot unnoticed.
 
 ---
 
 ## How it's built
 
-Six weekly scans of forty hosts, generated with realistic change from week to week —
-findings persist, get remediated, and reappear. Each scan lands as raw `jsonb`, is
-projected into a partitioned fact table, and is reconciled against a POA&M register
-that opens, closes, and reopens commitments. A synthetic eMASS export provides the
-second source, and the two are correlated.
+Six weekly Nessus exports covering forty hosts, with realistic change from week to
+week — findings persist, get remediated, and reappear. Each scan is parsed from its
+`.nessus` file, lands as raw `jsonb`, is projected into a partitioned fact table,
+and is reconciled against a POA&M register that opens, closes, and reopens
+commitments. A simulated eMASS export provides the second source, and the two are
+correlated.
 
 The whole flow, in one line:
 
 ```
-Generator → Ingest → finding → Poam.Sync → poam
-                        ↓
-     Controls (eMASS export + plugin↔control map) → correlation
+.nessus files → NessusImport → Ingest → finding → Poam.Sync → poam
+                                           ↓
+        Controls (eMASS export + plugin↔control map) → correlation
 ```
 
 Every file owns one subject, and the source is heavily commented — each method
@@ -169,8 +188,9 @@ detail lives in the code; this is the map:
 
 | File | What it owns |
 |---|---|
-| `Program.cs` | The sequence: bootstrap, ingest six scans, prove idempotency, print the reports. |
-| `Generator.cs` | Stands in for Nessus. Invents findings, remembers the open set between scans. Touches no database. |
+| `Program.cs` | The sequence: bootstrap, ingest each scan file, prove idempotency, print the reports. |
+| `NessusImport.cs` | Parses Tenable `.nessus` export files into findings. Touches no database directly. |
+| `samples/weekly/` | Six weekly `.nessus` exports, 2026-07-03 → 2026-08-07, forty hosts. The default input. |
 | `Ingest.cs` | The two-stage load: `COPY` into the landing table, then `INSERT … SELECT` into the fact table. |
 | `Schema.cs` | All the DDL, with the design reasoning in the comments. |
 | `Poam.cs` | The commitment register: opens, closes and reopens POA&Ms against each scan. |

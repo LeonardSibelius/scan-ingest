@@ -9,8 +9,8 @@ namespace ScanIngest;
 // TWO KINDS OF ROW
 //
 //   THE PIPELINE   Finding and ScanRun. These move through the program:
-//                  Generator makes Findings, Ingest writes them, the database
-//                  stores them.
+//                  NessusImport reads Findings out of a scanner export, Ingest
+//                  writes them, the database stores them.
 //
 //   THE REPORTS    Everything below the second divider — SeverityRow, TrendRow,
 //                  PoamItemRow and the rest. One per report, describing the row

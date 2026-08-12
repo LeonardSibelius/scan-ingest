@@ -46,7 +46,7 @@ deadlines, aging reports) exists to make that comparison honest and useful.
 ```mermaid
 flowchart LR
     subgraph SourceA["Source A — the robot"]
-        Scanner["Vulnerability scanner<br/>(Nessus / Generator.cs)"]
+        Scanner["Vulnerability scanner<br/>(Nessus .nessus export)"]
         Findings["Problems on machines<br/>(findings)"]
         Scanner --> Findings
     end
@@ -103,7 +103,7 @@ bottom once, prints 13 sections, and exits.
 flowchart TD
     Start([dotnet run]) --> Schema["1. Create database + tables<br/>Schema.cs"]
     Schema --> Loop{"For each of 6 weeks"}
-    Loop --> Gen["Invent this week's findings<br/>Generator.cs"]
+    Loop --> Gen["Parse this week's .nessus file<br/>NessusImport.cs"]
     Gen --> Ingest["Load findings into DB<br/>Ingest.cs"]
     Ingest --> PoamSync["Update promises to fix things<br/>Poam.Sync"]
     PoamSync --> Loop
@@ -125,9 +125,10 @@ flowchart TD
 | `[8]`–`[10]` | Questions about *who promised to fix what, and by when* |
 | `[11]`–`[13]` | Second source + the disagreement report |
 
-**Important:** all data is **synthetic**. No real network is scanned. Numbers are
-reproducible (fixed random seed), which is why the tutorial can say “you should
-see 1730 findings.”
+**Important:** the scan files are **real Nessus format but not a real network** —
+they describe a fictional forty-host estate, so nothing here scans anything. The
+files are fixed on disk, so the numbers never move, which is why the tutorial can
+say “you should see 1730 findings.”
 
 ---
 
@@ -137,8 +138,8 @@ There are three layers of “truth” about a problem:
 
 ```mermaid
 flowchart TB
-    subgraph Fake["In real life this would be a real scanner file"]
-        G["Generator.cs<br/>remembers open problems week to week<br/>40 hosts × 20 check types"]
+    subgraph Fake["Six weekly Nessus export files"]
+        G["NessusImport.cs<br/>parses .nessus XML<br/>40 hosts × 20 check types"]
     end
 
     subgraph Stage1["Stage 1 — land raw"]
@@ -483,7 +484,7 @@ authorization package has nowhere to file the risk.
 
 ```mermaid
 sequenceDiagram
-    participant Gen as Generator
+    participant Gen as NessusImport
     participant Raw as raw_finding
     participant Fact as finding
     participant Poam as poam
@@ -516,14 +517,14 @@ sequenceDiagram
 flowchart TB
     Program["Program.cs<br/>conductor — order of operations"]
 
-    Program --> Generator
+    Program --> NessusImport
     Program --> Ingest
     Program --> Poam
     Program --> Findings
     Program --> PluginCatalog
     Program --> Controls
 
-    Generator["Generator.cs<br/>fake scanner"]
+    NessusImport["NessusImport.cs<br/>parses .nessus files"]
     Ingest["Ingest.cs<br/>write raw + finding"]
     Schema["Schema.cs<br/>CREATE TABLE"]
     Poam["Poam.cs<br/>open / reopen / close"]
@@ -546,7 +547,8 @@ flowchart TB
 | File | Owns |
 |------|------|
 | `Program.cs` | The storyboard (what happens in which order) |
-| `Generator.cs` | Fake weekly scan data (no database) |
+| `NessusImport.cs` | Parses Nessus `.nessus` export files (no database) |
+| `samples/weekly/` | Six weekly `.nessus` exports — the program's default input |
 | `Ingest.cs` | Writes `scan_run`, `raw_finding`, `finding` |
 | `Schema.cs` | All table definitions and partitions |
 | `Poam.cs` | Writes/updates `poam`; some POA&M reports |

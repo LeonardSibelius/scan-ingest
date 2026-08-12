@@ -60,7 +60,13 @@ dotnet run
 ```
 
 The first run takes a minute — it downloads two libraries, creates a database
-called `scanprep`, builds the tables, and then does its work. Later runs are fast.
+called `scanprep`, builds the tables, then reads the six weekly Nessus export
+files in `samples/weekly/` and loads them. Later runs are fast.
+
+Those files are real `.nessus` exports — the XML format Nessus writes when a scan
+finishes. They describe a fictional forty-host estate, one file per week. If you
+have your own Nessus exports, `dotnet run -- /path/to/your/scans` reads those
+instead; nothing else about the program changes.
 
 **You should see** thirteen numbered sections scroll past, ending with `done.`
 
@@ -75,7 +81,7 @@ just know the shape:
 
 | Sections | Story |
 |---|---|
-| `[1]`–`[3]` | **Loading.** Six weekly scans go into the database. Then the same scan is loaded a second time to prove nothing doubles. |
+| `[1]`–`[3]` | **Loading.** Six weekly Nessus export files go into the database. Then the last file is loaded a second time to prove nothing doubles. |
 | `[4]`–`[7]` | **What the scanner sees.** How many problems, what changed since last week, how long things have been broken. |
 | `[8]`–`[13]` | **What it means.** Who promised to fix what and by when — and where the security paperwork disagrees with the scanner. |
 

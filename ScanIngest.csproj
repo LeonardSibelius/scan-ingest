@@ -24,6 +24,9 @@
          SqlLibrary. Copy it next to the binary so it is found the same way
          whether run via `dotnet run` or from a published folder. -->
     <None Update="queries.sql" CopyToOutputDirectory="PreserveNewest" />
+    <!-- The six weekly Nessus exports are the program's default input, read from
+         beside the binary so `dotnet run` works from any directory. -->
+    <None Update="samples\weekly\*.nessus" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

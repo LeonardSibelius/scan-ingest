@@ -11,8 +11,10 @@ namespace ScanIngest.Tests;
 // file throws at you that must not crash the import: a malformed ReportItem and
 // a host with no name.
 //
-// The last test parses the checked-in samples/sample-scan.nessus, so the sample
-// file itself cannot rot unnoticed.
+// The later tests read the six checked-in exports in samples/weekly — the same
+// files `dotnet run` loads — so the bundled data itself cannot rot unnoticed.
+// They also pin the ordering guarantee: LoadAll must return oldest scan first,
+// because every week-over-week report depends on it.
 // =============================================================================
 
 public class NessusImportTests
@@ -100,17 +102,75 @@ public class NessusImportTests
         Assert.Equal(Fallback, scan.ScannedAt);
     }
 
+    private static string WeeklyDir =>
+        Path.Combine(AppContext.BaseDirectory, "samples", "weekly");
+
     [Fact]
-    public void ParseFile_ReadsTheCheckedInSample()
+    public void ParseFile_ReadsTheFirstBundledWeeklyScan()
     {
-        var path = Path.Combine(AppContext.BaseDirectory, "samples", "sample-scan.nessus");
+        var path = Path.Combine(WeeklyDir, "scan-2026-07-03.nessus");
         Assert.True(File.Exists(path), $"sample not found at {path}");
 
         var scan = NessusImport.ParseFile(path, Fallback);
 
-        // 3 hosts, 11 findings, 4 of them carrying a CVE, scan dated 2026-08-14.
-        Assert.Equal(11, scan.Findings.Count);
-        Assert.Equal(4, scan.Findings.Count(f => f.Cve is not null));
-        Assert.Equal(new DateTimeOffset(2026, 8, 14, 9, 0, 0, TimeSpan.Zero), scan.ScannedAt);
+        // The first weekly export: 309 findings across the forty-host estate,
+        // scanned 2026-07-03 at 09:00Z.
+        Assert.Equal(309, scan.Findings.Count);
+        Assert.Equal(40, scan.Findings.Select(f => f.Host).Distinct().Count());
+        Assert.Equal(new DateTimeOffset(2026, 7, 3, 9, 0, 0, TimeSpan.Zero), scan.ScannedAt);
+    }
+
+    [Fact]
+    public void LoadAll_ReturnsTheSixWeeklyScansOldestFirst()
+    {
+        // The whole bundled history. Ordering is load-bearing: every trend and
+        // delta report compares a scan against the one before it.
+        var scans = NessusImport.LoadAll(WeeklyDir, Fallback);
+
+        Assert.Equal(6, scans.Count);
+        Assert.Equal(1730, scans.Sum(s => s.Findings.Count));
+
+        for (var i = 1; i < scans.Count; i++)
+            Assert.True(scans[i].ScannedAt > scans[i - 1].ScannedAt,
+                "scans must be ordered oldest first");
+
+        // Seven days apart, 2026-07-03 through 2026-08-07.
+        Assert.Equal(new DateTimeOffset(2026, 7, 3, 9, 0, 0, TimeSpan.Zero), scans[0].ScannedAt);
+        Assert.Equal(new DateTimeOffset(2026, 8, 7, 9, 0, 0, TimeSpan.Zero), scans[^1].ScannedAt);
+    }
+
+    [Fact]
+    public void LoadAll_OnASingleFile_ReturnsJustThatScan()
+    {
+        var path  = Path.Combine(WeeklyDir, "scan-2026-07-10.nessus");
+        var scans = NessusImport.LoadAll(path, Fallback);
+
+        Assert.Single(scans);
+        Assert.Equal(294, scans[0].Findings.Count);
+    }
+
+    [Fact]
+    public void LoadAll_OnAMissingPath_ReturnsEmptyRatherThanThrowing()
+    {
+        var scans = NessusImport.LoadAll(
+            Path.Combine(AppContext.BaseDirectory, "no-such-folder"), Fallback);
+
+        Assert.Empty(scans);
+    }
+
+    [Fact]
+    public void DeterministicRunId_IsStableForTheSameScan()
+    {
+        // Same source + timestamp must always produce the same id — that is what
+        // turns a re-import into a replay instead of a duplicate scan.
+        var at = new DateTimeOffset(2026, 7, 3, 9, 0, 0, TimeSpan.Zero);
+
+        Assert.Equal(
+            NessusImport.DeterministicRunId("acas-nessus", at),
+            NessusImport.DeterministicRunId("acas-nessus", at));
+
+        Assert.NotEqual(
+            NessusImport.DeterministicRunId("acas-nessus", at),
+            NessusImport.DeterministicRunId("acas-nessus", at.AddDays(7)));
     }
 }

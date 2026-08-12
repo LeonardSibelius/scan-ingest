@@ -10,7 +10,7 @@ namespace ScanIngest;
 // Controls.cs.
 //
 // Files in this project are named by SUBJECT — Poam, Controls, Ingest,
-// Schema, Generator, PluginCatalog — and each owns that subject end to end.
+// Schema, NessusImport, PluginCatalog — and each owns that subject end to end.
 // Poam.cs both writes commitments and reads them back. This file is the odd one
 // out only because findings are written elsewhere, by Ingest.cs.
 //

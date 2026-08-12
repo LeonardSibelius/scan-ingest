@@ -9,13 +9,16 @@ namespace ScanIngest;
 //
 // WHERE THIS SITS
 //
-// Generator.cs invents the findings. This file stores them. Neither one crosses
-// into the other: Generator holds no database connection, and nothing in here
-// invents a finding — they arrive as a parameter.
+// NessusImport.cs reads the findings out of a scanner export. This file stores
+// them. Neither one crosses into the other: the parser holds no database
+// connection, and nothing in here parses anything — the findings arrive as a
+// parameter.
 //
-// That boundary is where the fake data ends. In a real deployment Generator.cs
-// is deleted and something that reads a Nessus export takes its place. Nothing
-// in this file would change, because it never cared where the list came from.
+// That boundary is the reason this file has never had to change. It does not
+// know whether a list of findings came from a bundled sample export, a live ACAS
+// feed, or some future scanner that is not Nessus at all. Give it Finding
+// records and a ScanRun and it stores them; everything else is somebody else's
+// problem.
 //
 // HOW ONE SCAN GETS LOADED
 //
@@ -116,10 +119,10 @@ public static class Ingest
             ON CONFLICT (scan_run_id) DO NOTHING
             """, conn, tx))
         {
-            // Parameters, never string concatenation. This is a demo against
-            // synthetic data, but the habit is the point — the moment scanner
-            // output is interpolated into SQL you have handed the scanner's
-            // output author a shell.
+            // Parameters, never string concatenation. This matters more here than
+            // in most places: the values come out of a scanner file, which is an
+            // untrusted document. Interpolate scanner output into SQL and you have
+            // handed whoever can write that file a shell.
             cmd.Parameters.AddWithValue("id",  run.ScanRunId);
             cmd.Parameters.AddWithValue("at",  run.ScannedAt);
             cmd.Parameters.AddWithValue("src", run.Source);

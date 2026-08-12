@@ -5,16 +5,25 @@ using Npgsql;
 namespace ScanIngest;
 
 // =============================================================================
-// NessusImport.cs — reads a real Tenable Nessus .nessus export and turns it
-// into the same Finding records Generator.cs invents.
+// NessusImport.cs — reads Tenable Nessus .nessus export files.
 //
-// This is the piece the whole architecture was built to receive. Generator.cs
-// is a stand-in for the scanner; this is the real thing. It parses Nessus's
-// native .nessus file (which is XML) and produces a ScanRun plus a list of
-// Finding records — the exact same types Ingest.IngestAsync already takes. So
-// nothing downstream changes: raw_finding, finding, poam, and every report read
-// the normalized rows and never learn whether they came from Generator or from
-// a real scanner file. That is the point worth demonstrating.
+// This is where the project's data comes from. A .nessus file is what Nessus
+// (and ACAS, the DoD deployment of it) writes when a scan finishes. This class
+// parses those files into Finding records and hands them to Ingest.cs, which
+// stores them. Nothing here touches the database directly except through Ingest.
+//
+// The repository ships six of them under samples/weekly — one per week,
+// 2026-07-03 through 2026-08-07, across a forty-host estate. They are a real
+// estate's worth of scan history: problems that persist from week to week, some
+// remediated, some newly discovered. That evolution is the point. A single scan
+// tells you what is broken today; six consecutive scans tell you what is getting
+// fixed, what is being ignored, and what came back — which is what continuous
+// monitoring actually means, and what every trend, delta, aging and POA&M report
+// in this project is computed from.
+//
+// Point the program at your own directory of .nessus exports and it works the
+// same way. Nothing in this file, or downstream of it, knows or cares whether a
+// file came from this repository or from a live scanner.
 //
 // WHAT A .nessus FILE LOOKS LIKE
 //
@@ -22,7 +31,7 @@ namespace ScanIngest;
 //     <Report name="...">
 //       <ReportHost name="host-005.mil">
 //         <HostProperties>
-//           <tag name="HOST_START_TIMESTAMP">1786698000</tag>   (unix seconds)
+//           <tag name="HOST_START_TIMESTAMP">1783501200</tag>   (unix seconds)
 //         </HostProperties>
 //         <ReportItem pluginID="97833" pluginName="SMBv1..." severity="4" ...>
 //           <cve>CVE-2017-0143</cve>
@@ -51,22 +60,55 @@ namespace ScanIngest;
 public static class NessusImport
 {
     /// <summary>
-    /// The result of parsing one .nessus file: the scan's timestamp and its findings.
+    /// Which system produced the data, recorded on every scan_run. ACAS is the
+    /// DoD's Nessus deployment, and this is the name the reports and docs use.
     /// </summary>
-    public sealed record ParsedScan(DateTimeOffset ScannedAt, IReadOnlyList<Finding> Findings);
+    public const string DefaultSource = "acas-nessus";
 
-    /// <summary>Parses a .nessus file from disk.</summary>
+    /// <summary>One parsed .nessus file: when the scan ran, and what it found.</summary>
+    public sealed record ParsedScan(string Path, DateTimeOffset ScannedAt, IReadOnlyList<Finding> Findings);
+
+    /// <summary>What an ingest of one parsed scan did.</summary>
+    public sealed record ImportResult(ScanRun Run, int Landed);
+
+    /// <summary>
+    /// Loads every .nessus file at <paramref name="pathOrDirectory"/> — a single
+    /// file, or a directory of them — and returns them ordered oldest scan first.
+    ///
+    /// Ordering by the scan timestamp INSIDE each file, not by filename, is
+    /// deliberate: the reports compare each scan against the one before it, so
+    /// feeding them out of order would compute deltas backwards. A filename is a
+    /// convention; the timestamp is the data.
+    /// </summary>
+    public static IReadOnlyList<ParsedScan> LoadAll(string pathOrDirectory, DateTimeOffset fallbackScannedAt)
+    {
+        var files = new List<string>();
+
+        if (File.Exists(pathOrDirectory))
+            files.Add(pathOrDirectory);
+        else if (Directory.Exists(pathOrDirectory))
+            files.AddRange(Directory.GetFiles(pathOrDirectory, "*.nessus"));
+
+        var scans = new List<ParsedScan>();
+        foreach (var file in files)
+            scans.Add(ParseFile(file, fallbackScannedAt));
+
+        scans.Sort((a, b) => a.ScannedAt.CompareTo(b.ScannedAt));
+        return scans;
+    }
+
+    /// <summary>Parses one .nessus file from disk.</summary>
     public static ParsedScan ParseFile(string path, DateTimeOffset fallbackScannedAt)
-        => Parse(XDocument.Load(path), fallbackScannedAt);
+        => Parse(XDocument.Load(path), path, fallbackScannedAt);
 
     /// <summary>
     /// Parses .nessus XML from a string. Split out so tests can run without a file
     /// on disk and without a database.
     /// </summary>
     public static ParsedScan ParseXml(string xml, DateTimeOffset fallbackScannedAt)
-        => Parse(XDocument.Parse(xml), fallbackScannedAt);
+        => Parse(XDocument.Parse(xml), "(xml)", fallbackScannedAt);
 
-    private static ParsedScan Parse(XDocument doc, DateTimeOffset fallbackScannedAt)
+    private static ParsedScan Parse(XDocument doc, string path, DateTimeOffset fallbackScannedAt)
     {
         var findings   = new List<Finding>();
         var startTimes = new List<DateTimeOffset>();
@@ -104,19 +146,19 @@ public static class NessusImport
             }
         }
 
-        // Sort for stable output, same reason Generator does: findings read in
-        // file order still want a defined order once they are downstream.
+        // Sort for stable output: findings read in file order still want a defined
+        // order downstream, so the same file always serialises the same way.
         findings.Sort((a, b) =>
         {
             var byHost = string.CompareOrdinal(a.Host, b.Host);
             return byHost != 0 ? byHost : a.PluginId.CompareTo(b.PluginId);
         });
 
-        // One scan_run has one timestamp. Use the earliest host start (when the
-        // scan began); fall back to the caller's value if the file carries none.
+        // One scan_run has one timestamp. Use the earliest host start — when the
+        // scan began — and fall back to the caller's value if the file carries none.
         var scannedAt = startTimes.Count > 0 ? startTimes.Min() : fallbackScannedAt;
 
-        return new ParsedScan(scannedAt, findings);
+        return new ParsedScan(path, scannedAt, findings);
     }
 
     /// <summary>
@@ -145,31 +187,37 @@ public static class NessusImport
     }
 
     /// <summary>
-    /// Parses a .nessus file and loads it through the existing ingest path — the
-    /// same Ingest.IngestAsync that Generator's output goes through. This is the
-    /// whole demonstration: a real scanner file reaching the pipeline with no
-    /// change to storage or reporting.
+    /// Stores one already-parsed scan through the standard ingest path.
     /// </summary>
-    /// <returns>Rows that landed in the fact table (zero on a replay).</returns>
-    public static async Task<int> ImportFileAsync(
-        NpgsqlConnection conn, string path, string source = "nessus-file",
-        DateTimeOffset? fallbackScannedAt = null)
+    /// <returns>The scan run created, and how many rows landed (zero on a replay).</returns>
+    public static async Task<ImportResult> IngestAsync(
+        NpgsqlConnection conn, ParsedScan scan, string source = DefaultSource)
     {
-        var parsed = ParseFile(path, fallbackScannedAt ?? DateTimeOffset.UtcNow);
-
         var run = new ScanRun(
-            ScanRunId: DeterministicRunId(source, parsed.ScannedAt),
-            ScannedAt: parsed.ScannedAt,
+            ScanRunId: DeterministicRunId(source, scan.ScannedAt),
+            ScannedAt: scan.ScannedAt,
             Source:    source);
 
-        return await Ingest.IngestAsync(conn, run, parsed.Findings);
+        var landed = await Ingest.IngestAsync(conn, run, scan.Findings);
+        return new ImportResult(run, landed);
     }
 
-    // Same derivation Program.cs uses for its run ids: a stable id from source +
-    // timestamp, so re-importing the same file is a harmless replay rather than a
-    // second scan. (Program.cs keeps its own copy; when this merges into
-    // `dotnet run` the two can share one helper.)
-    private static Guid DeterministicRunId(string source, DateTimeOffset at)
+    /// <summary>Parses one file and stores it. Convenience wrapper.</summary>
+    public static async Task<ImportResult> ImportFileAsync(
+        NpgsqlConnection conn, string path, string source = DefaultSource,
+        DateTimeOffset? fallbackScannedAt = null)
+    {
+        var scan = ParseFile(path, fallbackScannedAt ?? DateTimeOffset.UtcNow);
+        return await IngestAsync(conn, scan, source);
+    }
+
+    /// <summary>
+    /// A stable scan id derived from source + timestamp rather than a random GUID.
+    /// Re-importing the same file produces the same id, so the whole load becomes
+    /// a harmless replay instead of a second copy of the scan. See the idempotency
+    /// check in Program.cs, which demonstrates exactly that.
+    /// </summary>
+    public static Guid DeterministicRunId(string source, DateTimeOffset at)
     {
         var bytes = System.Security.Cryptography.MD5.HashData(
             System.Text.Encoding.UTF8.GetBytes($"{source}|{at:O}"));

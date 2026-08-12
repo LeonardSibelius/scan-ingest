@@ -1,0 +1,1251 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<NessusClientData_v2>
+  <Policy>
+    <policyName>Full Estate Scan</policyName>
+  </Policy>
+  <Report name="Weekly Estate Scan 2026-07-10">
+    <ReportHost name="host-001.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.1</tag>
+        <tag name="operating-system">Ubuntu 22.04.3 LTS</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674000</tag>
+        <tag name="HOST_END_TIMESTAMP">1783674315</tag>
+      </HostProperties>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="2" pluginID="11213" pluginName="HTTP TRACE / TRACK Methods Allowed" pluginFamily="Web Servers">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="42873" pluginName="SSL Medium Strength Cipher Suites" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-002.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.2</tag>
+        <tag name="operating-system">Red Hat Enterprise Linux 8.8</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674030</tag>
+        <tag name="HOST_END_TIMESTAMP">1783674360</tag>
+      </HostProperties>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="11219" pluginName="Nessus SYN scanner" pluginFamily="Port scanners">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="20007" pluginName="SSL Version 2 and 3 Protocol Detection" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="1" pluginID="25220" pluginName="TCP/IP Timestamps Supported" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="42873" pluginName="SSL Medium Strength Cipher Suites" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="57582" pluginName="SSL Self-Signed Certificate" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="58751" pluginName="SSL/TLS Suboptimal Renegotiation" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="22" svc_name="ssh" protocol="tcp" severity="2" pluginID="90317" pluginName="SSH Weak Algorithms Supported" pluginFamily="Misc.">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-003.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.3</tag>
+        <tag name="operating-system">Microsoft Windows Server 2016</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674060</tag>
+        <tag name="HOST_END_TIMESTAMP">1783674405</tag>
+      </HostProperties>
+      <ReportItem port="8080" svc_name="www" protocol="tcp" severity="1" pluginID="12085" pluginName="Apache Tomcat Default Files" pluginFamily="Web Servers">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="19506" pluginName="Nessus Scan Information" pluginFamily="Settings">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="20007" pluginName="SSL Version 2 and 3 Protocol Detection" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="1" pluginID="25220" pluginName="TCP/IP Timestamps Supported" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="42873" pluginName="SSL Medium Strength Cipher Suites" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="45411" pluginName="SSL Certificate with Wrong Hostname" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="57582" pluginName="SSL Self-Signed Certificate" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="78479" pluginName="SSLv3 Padding Oracle (POODLE)" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <cve>CVE-2014-3566</cve>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-004.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.4</tag>
+        <tag name="operating-system">Ubuntu 22.04.3 LTS</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674090</tag>
+        <tag name="HOST_END_TIMESTAMP">1783674450</tag>
+      </HostProperties>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="10863" pluginName="SSL Certificate Information" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="11219" pluginName="Nessus SYN scanner" pluginFamily="Port scanners">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="1" pluginID="25220" pluginName="TCP/IP Timestamps Supported" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="26928" pluginName="SSL Weak Cipher Suites Supported" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <cve>CVE-2013-2566</cve>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="42873" pluginName="SSL Medium Strength Cipher Suites" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="45411" pluginName="SSL Certificate with Wrong Hostname" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="57582" pluginName="SSL Self-Signed Certificate" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="4" pluginID="73412" pluginName="OpenSSL Heartbeat Information Disclosure" pluginFamily="Web Servers">
+        <risk_factor>Critical</risk_factor>
+        <cve>CVE-2014-0160</cve>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="78479" pluginName="SSLv3 Padding Oracle (POODLE)" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <cve>CVE-2014-3566</cve>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-005.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.5</tag>
+        <tag name="operating-system">Red Hat Enterprise Linux 8.8</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674120</tag>
+        <tag name="HOST_END_TIMESTAMP">1783674495</tag>
+      </HostProperties>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="2" pluginID="11213" pluginName="HTTP TRACE / TRACK Methods Allowed" pluginFamily="Web Servers">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="11219" pluginName="Nessus SYN scanner" pluginFamily="Port scanners">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="19506" pluginName="Nessus Scan Information" pluginFamily="Settings">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="20007" pluginName="SSL Version 2 and 3 Protocol Detection" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="35291" pluginName="SSL Certificate Signed With Weak Hash" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="51192" pluginName="SSL Certificate Cannot Be Trusted" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="57582" pluginName="SSL Self-Signed Certificate" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="4" pluginID="73412" pluginName="OpenSSL Heartbeat Information Disclosure" pluginFamily="Web Servers">
+        <risk_factor>Critical</risk_factor>
+        <cve>CVE-2014-0160</cve>
+      </ReportItem>
+      <ReportItem port="445" svc_name="cifs" protocol="tcp" severity="4" pluginID="97833" pluginName="SMBv1 Remote Code Execution" pluginFamily="Windows">
+        <risk_factor>Critical</risk_factor>
+        <cve>CVE-2017-0143</cve>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-006.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.6</tag>
+        <tag name="operating-system">Microsoft Windows Server 2016</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674150</tag>
+        <tag name="HOST_END_TIMESTAMP">1783674540</tag>
+      </HostProperties>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="0" pluginID="10107" pluginName="HTTP Server Type and Version" pluginFamily="Web Servers">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="10863" pluginName="SSL Certificate Information" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="20007" pluginName="SSL Version 2 and 3 Protocol Detection" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="26928" pluginName="SSL Weak Cipher Suites Supported" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <cve>CVE-2013-2566</cve>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="51192" pluginName="SSL Certificate Cannot Be Trusted" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="445" svc_name="cifs" protocol="tcp" severity="4" pluginID="97833" pluginName="SMBv1 Remote Code Execution" pluginFamily="Windows">
+        <risk_factor>Critical</risk_factor>
+        <cve>CVE-2017-0143</cve>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-007.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.7</tag>
+        <tag name="operating-system">Ubuntu 22.04.3 LTS</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674180</tag>
+        <tag name="HOST_END_TIMESTAMP">1783674480</tag>
+      </HostProperties>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="0" pluginID="10107" pluginName="HTTP Server Type and Version" pluginFamily="Web Servers">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="2" pluginID="11213" pluginName="HTTP TRACE / TRACK Methods Allowed" pluginFamily="Web Servers">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="11219" pluginName="Nessus SYN scanner" pluginFamily="Port scanners">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="8080" svc_name="www" protocol="tcp" severity="1" pluginID="12085" pluginName="Apache Tomcat Default Files" pluginFamily="Web Servers">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="19506" pluginName="Nessus Scan Information" pluginFamily="Settings">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="35291" pluginName="SSL Certificate Signed With Weak Hash" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="42873" pluginName="SSL Medium Strength Cipher Suites" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="45411" pluginName="SSL Certificate with Wrong Hostname" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="51192" pluginName="SSL Certificate Cannot Be Trusted" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="58751" pluginName="SSL/TLS Suboptimal Renegotiation" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-008.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.8</tag>
+        <tag name="operating-system">Red Hat Enterprise Linux 8.8</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674210</tag>
+        <tag name="HOST_END_TIMESTAMP">1783674525</tag>
+      </HostProperties>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="10863" pluginName="SSL Certificate Information" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="1" pluginID="25220" pluginName="TCP/IP Timestamps Supported" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="26928" pluginName="SSL Weak Cipher Suites Supported" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <cve>CVE-2013-2566</cve>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="45411" pluginName="SSL Certificate with Wrong Hostname" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="58751" pluginName="SSL/TLS Suboptimal Renegotiation" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-009.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.9</tag>
+        <tag name="operating-system">Microsoft Windows Server 2016</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674240</tag>
+        <tag name="HOST_END_TIMESTAMP">1783674570</tag>
+      </HostProperties>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="10863" pluginName="SSL Certificate Information" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="15901" pluginName="SSL Certificate Expiry" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="19506" pluginName="Nessus Scan Information" pluginFamily="Settings">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="42873" pluginName="SSL Medium Strength Cipher Suites" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="51192" pluginName="SSL Certificate Cannot Be Trusted" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="78479" pluginName="SSLv3 Padding Oracle (POODLE)" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <cve>CVE-2014-3566</cve>
+      </ReportItem>
+      <ReportItem port="445" svc_name="cifs" protocol="tcp" severity="4" pluginID="97833" pluginName="SMBv1 Remote Code Execution" pluginFamily="Windows">
+        <risk_factor>Critical</risk_factor>
+        <cve>CVE-2017-0143</cve>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-010.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.10</tag>
+        <tag name="operating-system">Ubuntu 22.04.3 LTS</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674270</tag>
+        <tag name="HOST_END_TIMESTAMP">1783674615</tag>
+      </HostProperties>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="0" pluginID="10107" pluginName="HTTP Server Type and Version" pluginFamily="Web Servers">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="10863" pluginName="SSL Certificate Information" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="2" pluginID="11213" pluginName="HTTP TRACE / TRACK Methods Allowed" pluginFamily="Web Servers">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="19506" pluginName="Nessus Scan Information" pluginFamily="Settings">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="1" pluginID="25220" pluginName="TCP/IP Timestamps Supported" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="35291" pluginName="SSL Certificate Signed With Weak Hash" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="57582" pluginName="SSL Self-Signed Certificate" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="78479" pluginName="SSLv3 Padding Oracle (POODLE)" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <cve>CVE-2014-3566</cve>
+      </ReportItem>
+      <ReportItem port="22" svc_name="ssh" protocol="tcp" severity="2" pluginID="90317" pluginName="SSH Weak Algorithms Supported" pluginFamily="Misc.">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-011.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.11</tag>
+        <tag name="operating-system">Red Hat Enterprise Linux 8.8</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674300</tag>
+        <tag name="HOST_END_TIMESTAMP">1783674660</tag>
+      </HostProperties>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="0" pluginID="10107" pluginName="HTTP Server Type and Version" pluginFamily="Web Servers">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="11219" pluginName="Nessus SYN scanner" pluginFamily="Port scanners">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="8080" svc_name="www" protocol="tcp" severity="1" pluginID="12085" pluginName="Apache Tomcat Default Files" pluginFamily="Web Servers">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="19506" pluginName="Nessus Scan Information" pluginFamily="Settings">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="20007" pluginName="SSL Version 2 and 3 Protocol Detection" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="35291" pluginName="SSL Certificate Signed With Weak Hash" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="51192" pluginName="SSL Certificate Cannot Be Trusted" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="22" svc_name="ssh" protocol="tcp" severity="2" pluginID="90317" pluginName="SSH Weak Algorithms Supported" pluginFamily="Misc.">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-012.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.12</tag>
+        <tag name="operating-system">Microsoft Windows Server 2016</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674330</tag>
+        <tag name="HOST_END_TIMESTAMP">1783674705</tag>
+      </HostProperties>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="10863" pluginName="SSL Certificate Information" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="11219" pluginName="Nessus SYN scanner" pluginFamily="Port scanners">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="19506" pluginName="Nessus Scan Information" pluginFamily="Settings">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="20007" pluginName="SSL Version 2 and 3 Protocol Detection" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="26928" pluginName="SSL Weak Cipher Suites Supported" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <cve>CVE-2013-2566</cve>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="45411" pluginName="SSL Certificate with Wrong Hostname" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="58751" pluginName="SSL/TLS Suboptimal Renegotiation" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="78479" pluginName="SSLv3 Padding Oracle (POODLE)" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <cve>CVE-2014-3566</cve>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-013.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.13</tag>
+        <tag name="operating-system">Ubuntu 22.04.3 LTS</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674360</tag>
+        <tag name="HOST_END_TIMESTAMP">1783674750</tag>
+      </HostProperties>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="15901" pluginName="SSL Certificate Expiry" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="1" pluginID="25220" pluginName="TCP/IP Timestamps Supported" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="42873" pluginName="SSL Medium Strength Cipher Suites" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="45411" pluginName="SSL Certificate with Wrong Hostname" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="57582" pluginName="SSL Self-Signed Certificate" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="58751" pluginName="SSL/TLS Suboptimal Renegotiation" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-014.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.14</tag>
+        <tag name="operating-system">Red Hat Enterprise Linux 8.8</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674390</tag>
+        <tag name="HOST_END_TIMESTAMP">1783674690</tag>
+      </HostProperties>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="10863" pluginName="SSL Certificate Information" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="2" pluginID="11213" pluginName="HTTP TRACE / TRACK Methods Allowed" pluginFamily="Web Servers">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="8080" svc_name="www" protocol="tcp" severity="1" pluginID="12085" pluginName="Apache Tomcat Default Files" pluginFamily="Web Servers">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="15901" pluginName="SSL Certificate Expiry" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="1" pluginID="25220" pluginName="TCP/IP Timestamps Supported" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="26928" pluginName="SSL Weak Cipher Suites Supported" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <cve>CVE-2013-2566</cve>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="42873" pluginName="SSL Medium Strength Cipher Suites" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="45411" pluginName="SSL Certificate with Wrong Hostname" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="51192" pluginName="SSL Certificate Cannot Be Trusted" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="58751" pluginName="SSL/TLS Suboptimal Renegotiation" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="445" svc_name="cifs" protocol="tcp" severity="4" pluginID="97833" pluginName="SMBv1 Remote Code Execution" pluginFamily="Windows">
+        <risk_factor>Critical</risk_factor>
+        <cve>CVE-2017-0143</cve>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-015.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.15</tag>
+        <tag name="operating-system">Microsoft Windows Server 2016</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674420</tag>
+        <tag name="HOST_END_TIMESTAMP">1783674735</tag>
+      </HostProperties>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="0" pluginID="10107" pluginName="HTTP Server Type and Version" pluginFamily="Web Servers">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="10863" pluginName="SSL Certificate Information" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="2" pluginID="11213" pluginName="HTTP TRACE / TRACK Methods Allowed" pluginFamily="Web Servers">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="15901" pluginName="SSL Certificate Expiry" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="20007" pluginName="SSL Version 2 and 3 Protocol Detection" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="1" pluginID="25220" pluginName="TCP/IP Timestamps Supported" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="35291" pluginName="SSL Certificate Signed With Weak Hash" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="42873" pluginName="SSL Medium Strength Cipher Suites" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="45411" pluginName="SSL Certificate with Wrong Hostname" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="4" pluginID="73412" pluginName="OpenSSL Heartbeat Information Disclosure" pluginFamily="Web Servers">
+        <risk_factor>Critical</risk_factor>
+        <cve>CVE-2014-0160</cve>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-016.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.16</tag>
+        <tag name="operating-system">Ubuntu 22.04.3 LTS</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674450</tag>
+        <tag name="HOST_END_TIMESTAMP">1783674780</tag>
+      </HostProperties>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="10863" pluginName="SSL Certificate Information" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="2" pluginID="11213" pluginName="HTTP TRACE / TRACK Methods Allowed" pluginFamily="Web Servers">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="11219" pluginName="Nessus SYN scanner" pluginFamily="Port scanners">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="35291" pluginName="SSL Certificate Signed With Weak Hash" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="51192" pluginName="SSL Certificate Cannot Be Trusted" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="58751" pluginName="SSL/TLS Suboptimal Renegotiation" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="22" svc_name="ssh" protocol="tcp" severity="2" pluginID="90317" pluginName="SSH Weak Algorithms Supported" pluginFamily="Misc.">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-017.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.17</tag>
+        <tag name="operating-system">Red Hat Enterprise Linux 8.8</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674480</tag>
+        <tag name="HOST_END_TIMESTAMP">1783674825</tag>
+      </HostProperties>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="0" pluginID="10107" pluginName="HTTP Server Type and Version" pluginFamily="Web Servers">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="10863" pluginName="SSL Certificate Information" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="11219" pluginName="Nessus SYN scanner" pluginFamily="Port scanners">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="15901" pluginName="SSL Certificate Expiry" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="19506" pluginName="Nessus Scan Information" pluginFamily="Settings">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="20007" pluginName="SSL Version 2 and 3 Protocol Detection" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-018.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.18</tag>
+        <tag name="operating-system">Microsoft Windows Server 2016</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674510</tag>
+        <tag name="HOST_END_TIMESTAMP">1783674870</tag>
+      </HostProperties>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="0" pluginID="10107" pluginName="HTTP Server Type and Version" pluginFamily="Web Servers">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="10863" pluginName="SSL Certificate Information" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="2" pluginID="11213" pluginName="HTTP TRACE / TRACK Methods Allowed" pluginFamily="Web Servers">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="8080" svc_name="www" protocol="tcp" severity="1" pluginID="12085" pluginName="Apache Tomcat Default Files" pluginFamily="Web Servers">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="26928" pluginName="SSL Weak Cipher Suites Supported" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <cve>CVE-2013-2566</cve>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="45411" pluginName="SSL Certificate with Wrong Hostname" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="51192" pluginName="SSL Certificate Cannot Be Trusted" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="57582" pluginName="SSL Self-Signed Certificate" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="58751" pluginName="SSL/TLS Suboptimal Renegotiation" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-019.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.19</tag>
+        <tag name="operating-system">Ubuntu 22.04.3 LTS</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674540</tag>
+        <tag name="HOST_END_TIMESTAMP">1783674915</tag>
+      </HostProperties>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="15901" pluginName="SSL Certificate Expiry" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="19506" pluginName="Nessus Scan Information" pluginFamily="Settings">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="1" pluginID="25220" pluginName="TCP/IP Timestamps Supported" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-020.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.20</tag>
+        <tag name="operating-system">Red Hat Enterprise Linux 8.8</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674570</tag>
+        <tag name="HOST_END_TIMESTAMP">1783674960</tag>
+      </HostProperties>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="0" pluginID="10107" pluginName="HTTP Server Type and Version" pluginFamily="Web Servers">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="15901" pluginName="SSL Certificate Expiry" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="35291" pluginName="SSL Certificate Signed With Weak Hash" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="42873" pluginName="SSL Medium Strength Cipher Suites" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="45411" pluginName="SSL Certificate with Wrong Hostname" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="51192" pluginName="SSL Certificate Cannot Be Trusted" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="58751" pluginName="SSL/TLS Suboptimal Renegotiation" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="4" pluginID="73412" pluginName="OpenSSL Heartbeat Information Disclosure" pluginFamily="Web Servers">
+        <risk_factor>Critical</risk_factor>
+        <cve>CVE-2014-0160</cve>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-021.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.21</tag>
+        <tag name="operating-system">Microsoft Windows Server 2016</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674600</tag>
+        <tag name="HOST_END_TIMESTAMP">1783674900</tag>
+      </HostProperties>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="15901" pluginName="SSL Certificate Expiry" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="42873" pluginName="SSL Medium Strength Cipher Suites" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="51192" pluginName="SSL Certificate Cannot Be Trusted" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="57582" pluginName="SSL Self-Signed Certificate" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="78479" pluginName="SSLv3 Padding Oracle (POODLE)" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <cve>CVE-2014-3566</cve>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-022.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.22</tag>
+        <tag name="operating-system">Ubuntu 22.04.3 LTS</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674630</tag>
+        <tag name="HOST_END_TIMESTAMP">1783674945</tag>
+      </HostProperties>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="10863" pluginName="SSL Certificate Information" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="4" pluginID="73412" pluginName="OpenSSL Heartbeat Information Disclosure" pluginFamily="Web Servers">
+        <risk_factor>Critical</risk_factor>
+        <cve>CVE-2014-0160</cve>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-023.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.23</tag>
+        <tag name="operating-system">Red Hat Enterprise Linux 8.8</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674660</tag>
+        <tag name="HOST_END_TIMESTAMP">1783674990</tag>
+      </HostProperties>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="11219" pluginName="Nessus SYN scanner" pluginFamily="Port scanners">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="57582" pluginName="SSL Self-Signed Certificate" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="78479" pluginName="SSLv3 Padding Oracle (POODLE)" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <cve>CVE-2014-3566</cve>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-024.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.24</tag>
+        <tag name="operating-system">Microsoft Windows Server 2016</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674690</tag>
+        <tag name="HOST_END_TIMESTAMP">1783675035</tag>
+      </HostProperties>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="0" pluginID="10107" pluginName="HTTP Server Type and Version" pluginFamily="Web Servers">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="10863" pluginName="SSL Certificate Information" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="11219" pluginName="Nessus SYN scanner" pluginFamily="Port scanners">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="8080" svc_name="www" protocol="tcp" severity="1" pluginID="12085" pluginName="Apache Tomcat Default Files" pluginFamily="Web Servers">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="15901" pluginName="SSL Certificate Expiry" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="35291" pluginName="SSL Certificate Signed With Weak Hash" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="42873" pluginName="SSL Medium Strength Cipher Suites" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="57582" pluginName="SSL Self-Signed Certificate" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="58751" pluginName="SSL/TLS Suboptimal Renegotiation" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="78479" pluginName="SSLv3 Padding Oracle (POODLE)" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <cve>CVE-2014-3566</cve>
+      </ReportItem>
+      <ReportItem port="445" svc_name="cifs" protocol="tcp" severity="4" pluginID="97833" pluginName="SMBv1 Remote Code Execution" pluginFamily="Windows">
+        <risk_factor>Critical</risk_factor>
+        <cve>CVE-2017-0143</cve>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-025.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.25</tag>
+        <tag name="operating-system">Ubuntu 22.04.3 LTS</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674720</tag>
+        <tag name="HOST_END_TIMESTAMP">1783675080</tag>
+      </HostProperties>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="10863" pluginName="SSL Certificate Information" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="2" pluginID="11213" pluginName="HTTP TRACE / TRACK Methods Allowed" pluginFamily="Web Servers">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="8080" svc_name="www" protocol="tcp" severity="1" pluginID="12085" pluginName="Apache Tomcat Default Files" pluginFamily="Web Servers">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="19506" pluginName="Nessus Scan Information" pluginFamily="Settings">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="26928" pluginName="SSL Weak Cipher Suites Supported" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <cve>CVE-2013-2566</cve>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="57582" pluginName="SSL Self-Signed Certificate" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="58751" pluginName="SSL/TLS Suboptimal Renegotiation" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="22" svc_name="ssh" protocol="tcp" severity="2" pluginID="90317" pluginName="SSH Weak Algorithms Supported" pluginFamily="Misc.">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-026.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.26</tag>
+        <tag name="operating-system">Red Hat Enterprise Linux 8.8</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674750</tag>
+        <tag name="HOST_END_TIMESTAMP">1783675125</tag>
+      </HostProperties>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="10863" pluginName="SSL Certificate Information" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="2" pluginID="11213" pluginName="HTTP TRACE / TRACK Methods Allowed" pluginFamily="Web Servers">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="11219" pluginName="Nessus SYN scanner" pluginFamily="Port scanners">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="8080" svc_name="www" protocol="tcp" severity="1" pluginID="12085" pluginName="Apache Tomcat Default Files" pluginFamily="Web Servers">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="15901" pluginName="SSL Certificate Expiry" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="19506" pluginName="Nessus Scan Information" pluginFamily="Settings">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="1" pluginID="25220" pluginName="TCP/IP Timestamps Supported" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="35291" pluginName="SSL Certificate Signed With Weak Hash" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="57582" pluginName="SSL Self-Signed Certificate" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="58751" pluginName="SSL/TLS Suboptimal Renegotiation" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="4" pluginID="73412" pluginName="OpenSSL Heartbeat Information Disclosure" pluginFamily="Web Servers">
+        <risk_factor>Critical</risk_factor>
+        <cve>CVE-2014-0160</cve>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-027.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.27</tag>
+        <tag name="operating-system">Microsoft Windows Server 2016</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674780</tag>
+        <tag name="HOST_END_TIMESTAMP">1783675170</tag>
+      </HostProperties>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="2" pluginID="11213" pluginName="HTTP TRACE / TRACK Methods Allowed" pluginFamily="Web Servers">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="35291" pluginName="SSL Certificate Signed With Weak Hash" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="45411" pluginName="SSL Certificate with Wrong Hostname" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="51192" pluginName="SSL Certificate Cannot Be Trusted" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-028.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.28</tag>
+        <tag name="operating-system">Ubuntu 22.04.3 LTS</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674810</tag>
+        <tag name="HOST_END_TIMESTAMP">1783675110</tag>
+      </HostProperties>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="15901" pluginName="SSL Certificate Expiry" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="35291" pluginName="SSL Certificate Signed With Weak Hash" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="45411" pluginName="SSL Certificate with Wrong Hostname" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="22" svc_name="ssh" protocol="tcp" severity="2" pluginID="90317" pluginName="SSH Weak Algorithms Supported" pluginFamily="Misc.">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="445" svc_name="cifs" protocol="tcp" severity="4" pluginID="97833" pluginName="SMBv1 Remote Code Execution" pluginFamily="Windows">
+        <risk_factor>Critical</risk_factor>
+        <cve>CVE-2017-0143</cve>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-029.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.29</tag>
+        <tag name="operating-system">Red Hat Enterprise Linux 8.8</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674840</tag>
+        <tag name="HOST_END_TIMESTAMP">1783675155</tag>
+      </HostProperties>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="10863" pluginName="SSL Certificate Information" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="2" pluginID="11213" pluginName="HTTP TRACE / TRACK Methods Allowed" pluginFamily="Web Servers">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="11219" pluginName="Nessus SYN scanner" pluginFamily="Port scanners">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="20007" pluginName="SSL Version 2 and 3 Protocol Detection" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="26928" pluginName="SSL Weak Cipher Suites Supported" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <cve>CVE-2013-2566</cve>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="35291" pluginName="SSL Certificate Signed With Weak Hash" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="42873" pluginName="SSL Medium Strength Cipher Suites" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="45411" pluginName="SSL Certificate with Wrong Hostname" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="51192" pluginName="SSL Certificate Cannot Be Trusted" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="57582" pluginName="SSL Self-Signed Certificate" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="4" pluginID="73412" pluginName="OpenSSL Heartbeat Information Disclosure" pluginFamily="Web Servers">
+        <risk_factor>Critical</risk_factor>
+        <cve>CVE-2014-0160</cve>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="78479" pluginName="SSLv3 Padding Oracle (POODLE)" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <cve>CVE-2014-3566</cve>
+      </ReportItem>
+      <ReportItem port="445" svc_name="cifs" protocol="tcp" severity="4" pluginID="97833" pluginName="SMBv1 Remote Code Execution" pluginFamily="Windows">
+        <risk_factor>Critical</risk_factor>
+        <cve>CVE-2017-0143</cve>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-030.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.30</tag>
+        <tag name="operating-system">Microsoft Windows Server 2016</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674870</tag>
+        <tag name="HOST_END_TIMESTAMP">1783675200</tag>
+      </HostProperties>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="0" pluginID="10107" pluginName="HTTP Server Type and Version" pluginFamily="Web Servers">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="15901" pluginName="SSL Certificate Expiry" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="1" pluginID="25220" pluginName="TCP/IP Timestamps Supported" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="45411" pluginName="SSL Certificate with Wrong Hostname" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="51192" pluginName="SSL Certificate Cannot Be Trusted" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-031.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.31</tag>
+        <tag name="operating-system">Ubuntu 22.04.3 LTS</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674900</tag>
+        <tag name="HOST_END_TIMESTAMP">1783675245</tag>
+      </HostProperties>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="2" pluginID="11213" pluginName="HTTP TRACE / TRACK Methods Allowed" pluginFamily="Web Servers">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="11219" pluginName="Nessus SYN scanner" pluginFamily="Port scanners">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="8080" svc_name="www" protocol="tcp" severity="1" pluginID="12085" pluginName="Apache Tomcat Default Files" pluginFamily="Web Servers">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="58751" pluginName="SSL/TLS Suboptimal Renegotiation" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="22" svc_name="ssh" protocol="tcp" severity="2" pluginID="90317" pluginName="SSH Weak Algorithms Supported" pluginFamily="Misc.">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-032.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.32</tag>
+        <tag name="operating-system">Red Hat Enterprise Linux 8.8</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674930</tag>
+        <tag name="HOST_END_TIMESTAMP">1783675290</tag>
+      </HostProperties>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="10863" pluginName="SSL Certificate Information" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="15901" pluginName="SSL Certificate Expiry" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="19506" pluginName="Nessus Scan Information" pluginFamily="Settings">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="20007" pluginName="SSL Version 2 and 3 Protocol Detection" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="1" pluginID="25220" pluginName="TCP/IP Timestamps Supported" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="78479" pluginName="SSLv3 Padding Oracle (POODLE)" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <cve>CVE-2014-3566</cve>
+      </ReportItem>
+      <ReportItem port="22" svc_name="ssh" protocol="tcp" severity="2" pluginID="90317" pluginName="SSH Weak Algorithms Supported" pluginFamily="Misc.">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-033.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.33</tag>
+        <tag name="operating-system">Microsoft Windows Server 2016</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674960</tag>
+        <tag name="HOST_END_TIMESTAMP">1783675335</tag>
+      </HostProperties>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="11219" pluginName="Nessus SYN scanner" pluginFamily="Port scanners">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="15901" pluginName="SSL Certificate Expiry" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="19506" pluginName="Nessus Scan Information" pluginFamily="Settings">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="1" pluginID="25220" pluginName="TCP/IP Timestamps Supported" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="26928" pluginName="SSL Weak Cipher Suites Supported" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <cve>CVE-2013-2566</cve>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="51192" pluginName="SSL Certificate Cannot Be Trusted" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-034.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.34</tag>
+        <tag name="operating-system">Ubuntu 22.04.3 LTS</tag>
+        <tag name="HOST_START_TIMESTAMP">1783674990</tag>
+        <tag name="HOST_END_TIMESTAMP">1783675380</tag>
+      </HostProperties>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="10863" pluginName="SSL Certificate Information" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="8080" svc_name="www" protocol="tcp" severity="1" pluginID="12085" pluginName="Apache Tomcat Default Files" pluginFamily="Web Servers">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="15901" pluginName="SSL Certificate Expiry" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="1" pluginID="25220" pluginName="TCP/IP Timestamps Supported" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="26928" pluginName="SSL Weak Cipher Suites Supported" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <cve>CVE-2013-2566</cve>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="35291" pluginName="SSL Certificate Signed With Weak Hash" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="45411" pluginName="SSL Certificate with Wrong Hostname" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="57582" pluginName="SSL Self-Signed Certificate" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="58751" pluginName="SSL/TLS Suboptimal Renegotiation" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="445" svc_name="cifs" protocol="tcp" severity="4" pluginID="97833" pluginName="SMBv1 Remote Code Execution" pluginFamily="Windows">
+        <risk_factor>Critical</risk_factor>
+        <cve>CVE-2017-0143</cve>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-035.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.35</tag>
+        <tag name="operating-system">Red Hat Enterprise Linux 8.8</tag>
+        <tag name="HOST_START_TIMESTAMP">1783675020</tag>
+        <tag name="HOST_END_TIMESTAMP">1783675320</tag>
+      </HostProperties>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="10863" pluginName="SSL Certificate Information" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="2" pluginID="11213" pluginName="HTTP TRACE / TRACK Methods Allowed" pluginFamily="Web Servers">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="19506" pluginName="Nessus Scan Information" pluginFamily="Settings">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="20007" pluginName="SSL Version 2 and 3 Protocol Detection" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="42873" pluginName="SSL Medium Strength Cipher Suites" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="51192" pluginName="SSL Certificate Cannot Be Trusted" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="4" pluginID="73412" pluginName="OpenSSL Heartbeat Information Disclosure" pluginFamily="Web Servers">
+        <risk_factor>Critical</risk_factor>
+        <cve>CVE-2014-0160</cve>
+      </ReportItem>
+      <ReportItem port="445" svc_name="cifs" protocol="tcp" severity="4" pluginID="97833" pluginName="SMBv1 Remote Code Execution" pluginFamily="Windows">
+        <risk_factor>Critical</risk_factor>
+        <cve>CVE-2017-0143</cve>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-036.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.36</tag>
+        <tag name="operating-system">Microsoft Windows Server 2016</tag>
+        <tag name="HOST_START_TIMESTAMP">1783675050</tag>
+        <tag name="HOST_END_TIMESTAMP">1783675365</tag>
+      </HostProperties>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="0" pluginID="10107" pluginName="HTTP Server Type and Version" pluginFamily="Web Servers">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="2" pluginID="11213" pluginName="HTTP TRACE / TRACK Methods Allowed" pluginFamily="Web Servers">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="11219" pluginName="Nessus SYN scanner" pluginFamily="Port scanners">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="8080" svc_name="www" protocol="tcp" severity="1" pluginID="12085" pluginName="Apache Tomcat Default Files" pluginFamily="Web Servers">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="19506" pluginName="Nessus Scan Information" pluginFamily="Settings">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="1" pluginID="25220" pluginName="TCP/IP Timestamps Supported" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="26928" pluginName="SSL Weak Cipher Suites Supported" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <cve>CVE-2013-2566</cve>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="42873" pluginName="SSL Medium Strength Cipher Suites" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="51192" pluginName="SSL Certificate Cannot Be Trusted" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="78479" pluginName="SSLv3 Padding Oracle (POODLE)" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <cve>CVE-2014-3566</cve>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-037.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.37</tag>
+        <tag name="operating-system">Ubuntu 22.04.3 LTS</tag>
+        <tag name="HOST_START_TIMESTAMP">1783675080</tag>
+        <tag name="HOST_END_TIMESTAMP">1783675410</tag>
+      </HostProperties>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="0" pluginID="10107" pluginName="HTTP Server Type and Version" pluginFamily="Web Servers">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="2" pluginID="11213" pluginName="HTTP TRACE / TRACK Methods Allowed" pluginFamily="Web Servers">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="15901" pluginName="SSL Certificate Expiry" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="19506" pluginName="Nessus Scan Information" pluginFamily="Settings">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="35291" pluginName="SSL Certificate Signed With Weak Hash" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="42873" pluginName="SSL Medium Strength Cipher Suites" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="45411" pluginName="SSL Certificate with Wrong Hostname" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="58751" pluginName="SSL/TLS Suboptimal Renegotiation" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="22" svc_name="ssh" protocol="tcp" severity="2" pluginID="90317" pluginName="SSH Weak Algorithms Supported" pluginFamily="Misc.">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-038.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.38</tag>
+        <tag name="operating-system">Red Hat Enterprise Linux 8.8</tag>
+        <tag name="HOST_START_TIMESTAMP">1783675110</tag>
+        <tag name="HOST_END_TIMESTAMP">1783675455</tag>
+      </HostProperties>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="0" pluginID="10107" pluginName="HTTP Server Type and Version" pluginFamily="Web Servers">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="11219" pluginName="Nessus SYN scanner" pluginFamily="Port scanners">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="8080" svc_name="www" protocol="tcp" severity="1" pluginID="12085" pluginName="Apache Tomcat Default Files" pluginFamily="Web Servers">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="1" pluginID="25220" pluginName="TCP/IP Timestamps Supported" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="58751" pluginName="SSL/TLS Suboptimal Renegotiation" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="445" svc_name="cifs" protocol="tcp" severity="4" pluginID="97833" pluginName="SMBv1 Remote Code Execution" pluginFamily="Windows">
+        <risk_factor>Critical</risk_factor>
+        <cve>CVE-2017-0143</cve>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-039.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.39</tag>
+        <tag name="operating-system">Microsoft Windows Server 2016</tag>
+        <tag name="HOST_START_TIMESTAMP">1783675140</tag>
+        <tag name="HOST_END_TIMESTAMP">1783675500</tag>
+      </HostProperties>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="0" pluginID="10107" pluginName="HTTP Server Type and Version" pluginFamily="Web Servers">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="2" pluginID="11213" pluginName="HTTP TRACE / TRACK Methods Allowed" pluginFamily="Web Servers">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="11219" pluginName="Nessus SYN scanner" pluginFamily="Port scanners">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="8080" svc_name="www" protocol="tcp" severity="1" pluginID="12085" pluginName="Apache Tomcat Default Files" pluginFamily="Web Servers">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="15901" pluginName="SSL Certificate Expiry" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="19506" pluginName="Nessus Scan Information" pluginFamily="Settings">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="20007" pluginName="SSL Version 2 and 3 Protocol Detection" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="45411" pluginName="SSL Certificate with Wrong Hostname" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="22" svc_name="ssh" protocol="tcp" severity="2" pluginID="90317" pluginName="SSH Weak Algorithms Supported" pluginFamily="Misc.">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="445" svc_name="cifs" protocol="tcp" severity="4" pluginID="97833" pluginName="SMBv1 Remote Code Execution" pluginFamily="Windows">
+        <risk_factor>Critical</risk_factor>
+        <cve>CVE-2017-0143</cve>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-040.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.40</tag>
+        <tag name="operating-system">Ubuntu 22.04.3 LTS</tag>
+        <tag name="HOST_START_TIMESTAMP">1783675170</tag>
+        <tag name="HOST_END_TIMESTAMP">1783675545</tag>
+      </HostProperties>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="0" pluginID="10107" pluginName="HTTP Server Type and Version" pluginFamily="Web Servers">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="10863" pluginName="SSL Certificate Information" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="80" svc_name="www" protocol="tcp" severity="2" pluginID="11213" pluginName="HTTP TRACE / TRACK Methods Allowed" pluginFamily="Web Servers">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="15901" pluginName="SSL Certificate Expiry" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="19506" pluginName="Nessus Scan Information" pluginFamily="Settings">
+        <risk_factor>None</risk_factor>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="1" pluginID="25220" pluginName="TCP/IP Timestamps Supported" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="57582" pluginName="SSL Self-Signed Certificate" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="58751" pluginName="SSL/TLS Suboptimal Renegotiation" pluginFamily="General">
+        <risk_factor>Low</risk_factor>
+      </ReportItem>
+    </ReportHost>
+  </Report>
+</NessusClientData_v2>

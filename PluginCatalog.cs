@@ -11,10 +11,16 @@ namespace ScanIngest;
 // scan to the next.
 //
 // In a real deployment this is a feed from Tenable, arriving on its own schedule
-// and quite separately from any scan results. It lives here rather than inside
-// the generator because two different things need it: the fake scanner needs it
-// to invent findings, and the database needs it as reference data so the
-// plugin→control mapping has something valid to point at.
+// and quite separately from any scan results. It is kept here, as reference data
+// loaded into the plugin table, because the plugin→control mapping needs
+// something valid to point at: plugin_control has a foreign key into plugin, so
+// the catalogue has to exist before any evidence mapping can be seeded.
+//
+// Note that the scan files do NOT come from this list — a .nessus export carries
+// its own plugin ids and names, and NessusImport reads them straight out of the
+// file. The two agree here because the bundled samples were scanned against
+// these same twenty checks; a file mentioning a plugin not listed here would
+// still load, it simply would not map to any control.
 // =============================================================================
 
 public static class PluginCatalog
