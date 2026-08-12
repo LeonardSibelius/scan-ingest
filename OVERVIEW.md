@@ -46,22 +46,22 @@ deadlines, aging reports) exists to make that comparison honest and useful.
 ```mermaid
 flowchart LR
     subgraph SourceA["Source A — the robot"]
-        Scanner["Vulnerability scanner<br>(Nessus .nessus export)"]
-        Findings["Problems on machines<br>(findings)"]
+        Scanner["Vulnerability scanner <br>(Nessus .nessus export)"]
+        Findings["Problems on machines <br>(findings)"]
         Scanner --> Findings
     end
 
     subgraph SourceB["Source B — the human"]
-        Assessor["Human assessor<br>(eMASS export)"]
-        Status["Compliant / Non-Compliant<br>per security rule"]
+        Assessor["Human assessor <br>(eMASS export)"]
+        Status["Compliant / Non-Compliant <br>per security rule"]
         Assessor --> Status
     end
 
-    Bridge["Dictionary that says<br>which robot-check<br>proves which rule"]
+    Bridge["Dictionary that says <br>which robot-check <br>proves which rule"]
 
     Findings --> Bridge
     Status --> Bridge
-    Bridge --> Report["Where they disagree<br>(the product)"]
+    Bridge --> Report["Where they disagree <br>(the product)"]
 ```
 
 ---
@@ -101,18 +101,18 @@ bottom once, prints 13 sections, and exits.
 
 ```mermaid
 flowchart TD
-    Start([dotnet run]) --> Schema["1. Create database + tables<br>Schema.cs"]
+    Start([dotnet run]) --> Schema["1. Create database + tables <br>Schema.cs"]
     Schema --> Loop{"For each of 6 weeks"}
-    Loop --> Gen["Parse this week's .nessus file<br>NessusImport.cs"]
-    Gen --> Ingest["Load findings into DB<br>Ingest.cs"]
-    Ingest --> PoamSync["Update promises to fix things<br>Poam.Sync"]
+    Loop --> Gen["Parse this week's .nessus file <br>NessusImport.cs"]
+    Gen --> Ingest["Load findings into DB <br>Ingest.cs"]
+    Ingest --> PoamSync["Update promises to fix things <br>Poam.Sync"]
     PoamSync --> Loop
     Loop --> Idem["Re-load last scan → prove row count unchanged"]
-    Idem --> Reports1["Reports about findings<br>Findings.cs + queries.sql"]
-    Reports1 --> Reports2["Reports about promises<br>Poam.cs + queries.sql"]
-    Reports2 --> Seed["Load control catalog + plugin map<br>PluginCatalog + Controls"]
+    Idem --> Reports1["Reports about findings <br>Findings.cs + queries.sql"]
+    Reports1 --> Reports2["Reports about promises <br>Poam.cs + queries.sql"]
+    Reports2 --> Seed["Load control catalog + plugin map <br>PluginCatalog + Controls"]
     Seed --> Emass["Fake the human assessor's export"]
-    Emass --> Corr["Compare robot vs human<br>CorrelateAsync"]
+    Emass --> Corr["Compare robot vs human <br>CorrelateAsync"]
     Corr --> Done([done.])
 ```
 
@@ -139,23 +139,23 @@ There are three layers of “truth” about a problem:
 ```mermaid
 flowchart TB
     subgraph Fake["Six weekly Nessus export files"]
-        G["NessusImport.cs<br>parses .nessus XML<br>40 hosts × 20 check types"]
+        G["NessusImport.cs <br>parses .nessus XML <br>40 hosts × 20 check types"]
     end
 
     subgraph Stage1["Stage 1 — land raw"]
-        SR["scan_run<br>one row per weekly scan"]
-        RF["raw_finding<br>one JSON blob per problem"]
+        SR["scan_run <br>one row per weekly scan"]
+        RF["raw_finding <br>one JSON blob per problem"]
         G --> SR
         G --> RF
     end
 
     subgraph Stage2["Stage 2 — normalize"]
-        F["finding<br>typed columns: host, plugin, severity, date"]
+        F["finding <br>typed columns: host, plugin, severity, date"]
         RF --> F
     end
 
     subgraph Commitments["Accountability layer"]
-        P["poam<br>one open/closed promise per host+plugin"]
+        P["poam <br>one open/closed promise per host+plugin"]
         F --> P
     end
 ```
@@ -186,13 +186,13 @@ That is why re-running the program does not double the data.
 ```mermaid
 flowchart LR
     subgraph Observations["Observations — time-stamped"]
-        F1["finding week 1<br>host-005 + plugin 97833"]
-        F2["finding week 2<br>host-005 + plugin 97833"]
-        F3["finding week 6<br>host-005 + plugin 97833"]
+        F1["finding week 1 <br>host-005 + plugin 97833"]
+        F2["finding week 2 <br>host-005 + plugin 97833"]
+        F3["finding week 6 <br>host-005 + plugin 97833"]
     end
 
     subgraph Promise["One commitment — lives across weeks"]
-        PO["poam<br>host-005 + 97833<br>owner, opened_on, due_on"]
+        PO["poam <br>host-005 + 97833 <br>owner, opened_on, due_on"]
     end
 
     F1 --> PO
@@ -453,15 +453,15 @@ still reported by the scanner every week. That asymmetry is how
 
 ```mermaid
 flowchart TD
-    Start([For each control in the latest assessment]) --> Q1{"Any scanner plugins<br>map to this control?"}
-    Q1 -->|No| NA["not assessable<br>We never looked — do not call this clean"]
+    Start([For each control in the latest assessment]) --> Q1{"Any scanner plugins <br>map to this control?"}
+    Q1 -->|No| NA["not assessable <br>We never looked — do not call this clean"]
     Q1 -->|Yes| Q2{"Paperwork says Compliant?"}
     Q2 -->|Yes| Q3{"Live findings > 0?"}
-    Q3 -->|Yes| C["CONTRADICTED<br>Paperwork is wrong / stale"]
-    Q3 -->|No| VC["verified clean<br>We looked; nothing found"]
+    Q3 -->|Yes| C["CONTRADICTED <br>Paperwork is wrong / stale"]
+    Q3 -->|No| VC["verified clean <br>We looked; nothing found"]
     Q2 -->|No Non-Compliant| Q4{"Live findings > 0?"}
-    Q4 -->|Yes| CO["corroborated<br>Paperwork and scanner agree"]
-    Q4 -->|No| U["unevidenced<br>Paperwork still fails it;<br>scanner no longer sees it"]
+    Q4 -->|Yes| CO["corroborated <br>Paperwork and scanner agree"]
+    Q4 -->|No| U["unevidenced <br>Paperwork still fails it; <br>scanner no longer sees it"]
 ```
 
 | Verdict | In one sentence |
@@ -493,12 +493,12 @@ sequenceDiagram
 
     Gen->>Raw: JSON blob week 1…6
     Raw->>Fact: Project columns (ON CONFLICT skip)
-    Note over Fact: 6 rows — same host+plugin,<br>six different scanned_at dates
+    Note over Fact: 6 rows — same host+plugin, <br>six different scanned_at dates
     Fact->>Poam: Sync after each scan
-    Note over Poam: 1 row — owner ISSO-Alpha<br>opened 2026-07-03, due 2026-07-18
+    Note over Poam: 1 row — owner ISSO-Alpha <br>opened 2026-07-03, due 2026-07-18
     Map->>Corr: 97833 evidences SI-2, CM-7
     Fact->>Corr: Still open on latest scan
-    Note over Corr: Feeds Non-Compliant / corroborated<br>for those controls (if high+crit)
+    Note over Corr: Feeds Non-Compliant / corroborated <br>for those controls (if high+crit)
 ```
 
 | Step | Table | What you see |
@@ -515,7 +515,7 @@ sequenceDiagram
 
 ```mermaid
 flowchart TB
-    Program["Program.cs<br>conductor — order of operations"]
+    Program["Program.cs <br>conductor — order of operations"]
 
     Program --> NessusImport
     Program --> Ingest
@@ -524,17 +524,17 @@ flowchart TB
     Program --> PluginCatalog
     Program --> Controls
 
-    NessusImport["NessusImport.cs<br>parses .nessus files"]
-    Ingest["Ingest.cs<br>write raw + finding"]
-    Schema["Schema.cs<br>CREATE TABLE"]
-    Poam["Poam.cs<br>open / reopen / close"]
-    Findings["Findings.cs<br>report methods"]
-    Controls["Controls.cs<br>eMASS + correlation"]
-    PluginCatalog["PluginCatalog.cs<br>20 plugins"]
-    Models["Models.cs<br>row shapes"]
-    SqlLib["SqlLibrary.cs<br>load query by name"]
-    Queries["queries.sql<br>all SELECT reports"]
-    ReportsPs1["reports.ps1<br>interactive menu"]
+    NessusImport["NessusImport.cs <br>parses .nessus files"]
+    Ingest["Ingest.cs <br>write raw + finding"]
+    Schema["Schema.cs <br>CREATE TABLE"]
+    Poam["Poam.cs <br>open / reopen / close"]
+    Findings["Findings.cs <br>report methods"]
+    Controls["Controls.cs <br>eMASS + correlation"]
+    PluginCatalog["PluginCatalog.cs <br>20 plugins"]
+    Models["Models.cs <br>row shapes"]
+    SqlLib["SqlLibrary.cs <br>load query by name"]
+    Queries["queries.sql <br>all SELECT reports"]
+    ReportsPs1["reports.ps1 <br>interactive menu"]
 
     Ingest --> Schema
     Findings --> SqlLib
