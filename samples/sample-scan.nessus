@@ -1,0 +1,85 @@
+<?xml version="1.0" ?>
+<NessusClientData_v2>
+  <Policy>
+    <policyName>Full Estate Scan</policyName>
+  </Policy>
+  <Report name="Weekly Estate Scan 2026-08-14" xmlns:cm="http://www.nessus.org/cm">
+    <ReportHost name="host-005.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.5</tag>
+        <tag name="operating-system">Microsoft Windows Server 2016</tag>
+        <tag name="HOST_START_TIMESTAMP">1786698000</tag>
+        <tag name="HOST_END_TIMESTAMP">1786698412</tag>
+      </HostProperties>
+      <ReportItem port="445" svc_name="cifs" protocol="tcp" severity="4" pluginID="97833" pluginName="SMBv1 Remote Code Execution" pluginFamily="Windows">
+        <risk_factor>Critical</risk_factor>
+        <cvss_base_score>9.3</cvss_base_score>
+        <cve>CVE-2017-0143</cve>
+        <description>The remote host supports SMBv1, which is affected by remote code execution vulnerabilities.</description>
+        <solution>Disable SMBv1 and apply the relevant security update.</solution>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="4" pluginID="73412" pluginName="OpenSSL Heartbeat Information Disclosure" pluginFamily="Web Servers">
+        <risk_factor>Critical</risk_factor>
+        <cvss_base_score>7.5</cvss_base_score>
+        <cve>CVE-2014-0160</cve>
+        <description>The remote service is affected by the Heartbleed information disclosure vulnerability.</description>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="42873" pluginName="SSL Medium Strength Cipher Suites" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+        <description>The remote service supports the use of medium strength SSL cipher suites.</description>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="19506" pluginName="Nessus Scan Information" pluginFamily="Settings">
+        <risk_factor>None</risk_factor>
+        <description>Information about the Nessus scan itself.</description>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-012.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.12</tag>
+        <tag name="operating-system">Ubuntu 22.04</tag>
+        <tag name="HOST_START_TIMESTAMP">1786698030</tag>
+        <tag name="HOST_END_TIMESTAMP">1786698390</tag>
+      </HostProperties>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="78479" pluginName="SSLv3 Padding Oracle (POODLE)" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <cvss_base_score>6.8</cvss_base_score>
+        <cve>CVE-2014-3566</cve>
+        <description>The remote service is affected by a man-in-the-middle information disclosure vulnerability known as POODLE.</description>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="15901" pluginName="SSL Certificate Expiry" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <description>The SSL certificate on the remote host has expired or will expire soon.</description>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="2" pluginID="51192" pluginName="SSL Certificate Cannot Be Trusted" pluginFamily="General">
+        <risk_factor>Medium</risk_factor>
+        <description>The certificate chain for this service could not be verified.</description>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="host-026.mil">
+      <HostProperties>
+        <tag name="host-ip">10.20.0.26</tag>
+        <tag name="operating-system">Red Hat Enterprise Linux 8</tag>
+        <tag name="HOST_START_TIMESTAMP">1786698060</tag>
+        <tag name="HOST_END_TIMESTAMP">1786698401</tag>
+      </HostProperties>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="20007" pluginName="SSL Version 2 and 3 Protocol Detection" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <description>The remote service accepts connections encrypted using SSL 2.0 and/or SSL 3.0.</description>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="3" pluginID="26928" pluginName="SSL Weak Cipher Suites Supported" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <cvss_base_score>4.3</cvss_base_score>
+        <cve>CVE-2013-2566</cve>
+        <description>The remote service supports the use of weak SSL cipher suites.</description>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="11219" pluginName="Nessus SYN scanner" pluginFamily="Port scanners">
+        <risk_factor>None</risk_factor>
+        <description>Port enumeration performed by the Nessus SYN scanner.</description>
+      </ReportItem>
+      <ReportItem port="22" svc_name="ssh" protocol="tcp" severity="2" pluginID="90317" pluginName="SSH Weak Algorithms Supported" pluginFamily="Misc.">
+        <risk_factor>Medium</risk_factor>
+        <description>The remote SSH server is configured to allow weak key exchange algorithms.</description>
+      </ReportItem>
+    </ReportHost>
+  </Report>
+</NessusClientData_v2>
